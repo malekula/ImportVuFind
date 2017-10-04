@@ -12,7 +12,7 @@ using System.IO;
 using System.Security;
 using System.Xml.Linq;
 using System.Diagnostics;
-
+using Newtonsoft.Json;
 namespace ExportBJ_XML
 {
     public partial class Form1 : Form
@@ -21,14 +21,14 @@ namespace ExportBJ_XML
         {
             InitializeComponent();
         }
-
+        Stopwatch sw;
         private void button1_Click(object sender, EventArgs e)
         {
-            Stopwatch sw = new Stopwatch();
+            sw = new Stopwatch();
             sw.Start();
             label3.Text = "Начато в "+DateTime.Now.ToLongTimeString();//.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second;
             //XmlWriter objXmlWriter = XmlTextWriter.Create(new BufferedStream(new FileStream(@"F:\bjvvv.xml", FileMode.Create, System.Security.AccessControl.FileSystemRights.Write, FileShare.None, 1024, FileOptions.SequentialScan)), new XmlWriterSettings { Encoding = Encoding.Unicode, Indent = true, CloseOutput = true });
-            XmlWriter objXmlWriter = XmlTextWriter.Create(@"F:\bjvvv.xml");
+            XmlWriter objXmlWriter = XmlTextWriter.Create(@"F:\bjvvv_current.xml");
             using (objXmlWriter)
             {
 
@@ -43,11 +43,12 @@ namespace ExportBJ_XML
                 //root.WriteTo(objXmlWriter);
 
                 XmlNode doc = main.CreateElement("doc");
+                int step = 300;
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////BJVVV/////////////////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 int MaxIDMAIN_BJVVV = GetMaxIDMAIN("BJVVV");
-                for (int i = 1; i < MaxIDMAIN_BJVVV; i += 1)
+                for (int i = 1; i < MaxIDMAIN_BJVVV; i += step)
                 {
                     string q = GetQuery("BJVVV", i);
                     int check = CreateBJDocs("BJVVV", q, main, doc, root, objXmlWriter);
@@ -63,7 +64,7 @@ namespace ExportBJ_XML
                 //////////////////////////////////REDKOSTJ/////////////////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 int MaxIDMAIN_REDKOSTJ = GetMaxIDMAIN("REDKOSTJ");
-                for (int i = 1; i < MaxIDMAIN_REDKOSTJ; i += 1)
+                for (int i = 1; i < MaxIDMAIN_REDKOSTJ; i += step)
                 {
                     string q = GetQuery("REDKOSTJ", i);
                     int check = CreateBJDocs("REDKOSTJ", q, main, doc, root, objXmlWriter);
@@ -79,7 +80,7 @@ namespace ExportBJ_XML
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 int MaxIDMAIN_ACC = GetMaxIDMAIN("BJACC");
 
-                for (int i = 1; i < MaxIDMAIN_ACC; i += 1)
+                for (int i = 1; i < MaxIDMAIN_ACC; i += step)
                 {
                     string q = GetQuery("BJACC", i);
                     int check = CreateBJDocs("BJACC", q, main, doc, root, objXmlWriter);
@@ -95,7 +96,7 @@ namespace ExportBJ_XML
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 int MaxIDMAIN_FCC = GetMaxIDMAIN("BJFCC");
 
-                for (int i = 1; i < MaxIDMAIN_FCC; i += 1)
+                for (int i = 1; i < MaxIDMAIN_FCC; i += step)
                 {
                     string q = GetQuery("BJFCC", i);
                     int check = CreateBJDocs("BJFCC", q, main, doc, root, objXmlWriter);
@@ -111,7 +112,7 @@ namespace ExportBJ_XML
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 int MaxIDMAIN_BRIT = GetMaxIDMAIN("BRIT_SOVET");
 
-                for (int i = 1; i < MaxIDMAIN_BRIT; i += 1)
+                for (int i = 1; i < MaxIDMAIN_BRIT; i += step)
                 {
                     string q = GetQuery("BRIT_SOVET", i);
                     int check = CreateBJDocs("BRIT_SOVET", q, main, doc, root, objXmlWriter);
@@ -127,7 +128,7 @@ namespace ExportBJ_XML
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 int MaxIDMAIN_SCC = GetMaxIDMAIN("BJSCC");
 
-                for (int i = 1; i < MaxIDMAIN_SCC; i += 1)
+                for (int i = 1; i < MaxIDMAIN_SCC; i += step)
                 {
                     string q = GetQuery("BJSCC", i);
                     int check = CreateBJDocs("BJSCC", q, main, doc, root, objXmlWriter);
@@ -141,73 +142,18 @@ namespace ExportBJ_XML
                 /////////////////////////////////////////////////////////////////////////////////////////////*/
                 //////////////////////////////////LITRES/////////////////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////
-                string litresFile = @"f:\csv_litres_exp_873.csv";
-
-                DataTable Litres = ConvertCSVtoDataTable(litresFile);
-                string allFields = "";
-
-                foreach (DataRow row in Litres.Rows)
-                {
-
-                    foreach (DataColumn col in Litres.Columns)
-                    {
-                        switch (col.ColumnName)
-                        {
-                            case "ID книги":
-                                
-
-                                //allFields = allFields + " "+row[col.ColumnName].ToString();
-                                break;
-                            case "Название":
-                                AddField(main, doc, "title", row[col.ColumnName].ToString());
-                                AddField(main, doc, "title_short", row[col.ColumnName].ToString());
-                                allFields = allFields + " " + row[col.ColumnName].ToString();
-                                break;
-                            case "Авторы":
-                                AddField(main, doc, "author", row[col.ColumnName].ToString());
-                                AddField(main, doc, "author_sort", row[col.ColumnName].ToString());
-                                allFields = allFields + " " + row[col.ColumnName].ToString();
-
-                                break;
-                            case "ISBN":
-                                AddField(main, doc, "isbn", row[col.ColumnName].ToString());
-                                allFields = allFields + " " + row[col.ColumnName].ToString();
-
-                                break;
-                            case "Издательство":
-                                AddField(main, doc, "publisher", row[col.ColumnName].ToString());
-                                allFields = allFields + " " + row[col.ColumnName].ToString();
-                                break;
-                            case "Год":
-                                AddField(main, doc, "publishDate", row[col.ColumnName].ToString());
-                                allFields = allFields + " " + row[col.ColumnName].ToString();
-                                break;
-                            case "Жанры":
-                                AddField(main, doc, "genre", row[col.ColumnName].ToString());
-                                allFields = allFields + " " + row[col.ColumnName].ToString();
-                                break;
-
-                        }
-                    }
-                    AddField(main, doc, "id", "litres_" + row["ID книги"].ToString());
-                    AddField(main, doc, "fund", GetRusFund("litres"));
-                    AddField(main, doc, "allfields", allFields);
-                    allFields = "";
-                    
-                    doc.WriteTo(objXmlWriter);
-                    doc = main.CreateElement("doc");
-                    label2.Text = "litres_" + row["ID книги"].ToString();
-                    Application.DoEvents();
-
-                }
+                XmlDocument litres = new XmlDocument();
+                //litres.Load(@"f:\api_litres.xml");
+                //int y = litres.ChildNodes.Count;
 
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////PERIOD/////////////////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////
+                string allFields = "";
                 SqlDataAdapter da = new SqlDataAdapter();
                 da.SelectCommand = new SqlCommand();
                 da.SelectCommand.Connection = new SqlConnection();
-                da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=PERIOD;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+                da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=PERIOD;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
                 da.SelectCommand.CommandText = "select * from PERIOD..PI where IDF = 120";
                 DataSet ds = new DataSet();
                 int cnt = da.Fill(ds, "t");
@@ -220,7 +166,7 @@ namespace ExportBJ_XML
                         continue;
                     if ((Convert.ToInt32(row["POLE"]) < 2258) || (Convert.ToInt32(row["POLE"]) > 2308))
                     {
-                        //continue;
+                        continue;
                     }
                     //title
                     da.SelectCommand.CommandText = "select * from PERIOD..PI where IDF = 121 and VVERH = "+row["IDZ"].ToString();
@@ -341,7 +287,7 @@ namespace ExportBJ_XML
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
             da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
             da.SelectCommand.CommandText = "select max(ID) from "+p+"..MAIN";
             DataSet ds = new DataSet();
             da.Fill(ds, "t");
@@ -403,7 +349,7 @@ namespace ExportBJ_XML
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
             da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
             da.SelectCommand.CommandText = query;
             DataSet ds = new DataSet();
             ds.Tables.Add("clarify");
@@ -722,10 +668,6 @@ namespace ExportBJ_XML
                     case "924$a":
                         AddField(main, doc, "AdditionalBibRecord", r["PLAIN"].ToString());
                         break;
-                    case "899$a":
-                        AddExemplarFields(r["IDDATA"].ToString(), main, fund, doc);
-                        AddField(main, doc, "Location", r["PLAIN"].ToString());
-                        break;
                     case "940$a":
                         AddField(main, doc, "HyperLink", r["PLAIN"].ToString());
                         AddField(main, doc, "Location", "Удалённый доступ");
@@ -770,6 +712,10 @@ namespace ExportBJ_XML
                     case "3200$a":
                         AddField(main, doc, "IllustrationMaterial", r["PLAIN"].ToString());
                         break;
+                    case "899$a":
+                        
+                        AddField(main, doc, "Location", r["PLAIN"].ToString());
+                        break;
                 }
                 
             }
@@ -780,10 +726,14 @@ namespace ExportBJ_XML
             AddField(main, doc, "fund", rusFund);
             AddField(main, doc, "allfields", allFields);
             AddField(main, doc, "Level", Level);
+
             if (description != "")
             {
                 AddField(main, doc, "description", description);
             }
+
+            AddExemplarFields(CurrentIDMAIN, main, fund, doc);
+            
             description = "";
 
             allFields = "";
@@ -816,173 +766,320 @@ namespace ExportBJ_XML
             }
             return "<неизвестный фонд>";
         }
-        private void AddExemplarFields(string iddata, XmlDocument main, string fund, XmlNode doc)
+
+        string ExemplarsCurrentIDMAIN = "";
+        string Exemplar = "";
+        private void AddExemplarFields(string idmain, XmlDocument main, string fund, XmlNode doc)
         {
-            string Exemplar = "";
+
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
             da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A" +
-                                " left join "+fund+"..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                               " where A.IDDATA = " + iddata;
+            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
+            da.SelectCommand.CommandText =  " select * from " + fund + "..DATAEXT A" +
+                                            " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                                            " where A.IDMAIN = " + idmain + " and A.MNFIELD = 899 and A.MSFIELD = '$p' "+
+                                            " and not exists (select 1 from BJVVV..DATAEXT C where C.IDDATA = A.IDDATA and C.MNFIELD = 921 and C.MSFIELD = '$c' and C.SORT = 'Списано')";
             DataSet ds = new DataSet();
             int i = da.Fill(ds, "t");
+
+            if (i == 0) return;
             string IDMAIN = ds.Tables["t"].Rows[0]["IDMAIN"].ToString();
-            foreach (DataRow r in ds.Tables["t"].Rows)
-            {
-                string code = r["MNFIELD"].ToString()+r["MSFIELD"].ToString();
-                switch (code)
-                {
-                    case "899$a":
-                        Exemplar += "Местонахождение:"+r["PLAIN"].ToString()+"#";
-                        break;
-                    case "482$a":
-                        Exemplar += "Приплетено к:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "899$b":
-                        string fnd = r["PLAIN"].ToString();
-                        if ((fnd == "ОФ") || (fnd == "Фонд редкой книги") || (fnd == "Фонд Редкой книги") || (fnd == "ОФ - Восток"))//надо определить что коллекция, что фонд, а что на дом.
-                        {
-                            AddField(main, doc, "MethodOfAccess", "В помещении библиотеки");
-                            //break;//тут надо оставить только коллекции
-                            Exemplar += "Доступ: Заказать через личный кабинет в зал библиотеки#";
-                        } else
-                        {
-                            AddField(main, doc, "collection", r["PLAIN"].ToString());
-                            Exemplar += "Доступ: Заказать через личный кабинет в зал библиотеки#";
-                        }
-                        if (fnd == "Абонемент")
-                        {
-                            AddField(main, doc, "MethodOfAccess", "На дом");
-                            //break;//тут надо оставить только коллекции
-                            Exemplar += "Доступ: Заказать через личный кабинет на дом#";
-                        }
-                        if ((fund == "BJFCC") || (fund == "BJACC") || (fund == "BRIT_SOVET") || (fund == "BJSCC"))
-                        {
-                            AddField(main, doc, "MethodOfAccess", "На дом");
-                            //break;//тут надо оставить только коллекции
-                            Exemplar += "Доступ: Проследовать в указанный зал для получения на дом#";
-                        }
 
-                        Exemplar += "Наименование фонда или коллекции:" + r["PLAIN"].ToString() + "#";
+            //if (IDMAIN != ExemplarsCurrentIDMAIN)
+            //{
+            //    Exemplar = "";
+            //    ExemplarsCurrentIDMAIN = IDMAIN;
+            //}
 
-                        break;
-                    case "899$c":
-                        Exemplar += "Местонахождение стеллажа:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "899$d":
-                        Exemplar += "Направление временного хранения:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "899$j":
-                        Exemplar += "Расстановочный шифр:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "899$p":
-                        Exemplar += "Инвентарный номер:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "899$w":
-                        Exemplar += "Штрихкод:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "899$x":
-                        Exemplar += "Примечание к инвентарному номеру:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "921$a":
-                        Exemplar += "Носитель:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "921$c":
-                        Exemplar += "Класс издания:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "922$b":
-                        Exemplar += "Трофей\\Принадлежность к:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$a":
-                        Exemplar += "Вид переплёта:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$b":
-                        Exemplar += "Век переплёта:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$c":
-                        Exemplar += "Тип переплёта:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$d":
-                        Exemplar += "Материал крышек:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$e":
-                        Exemplar += "Материал на крышках:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$f":
-                        Exemplar += "Материал корешка:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$g":
-                        Exemplar += "Бинты:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$h":
-                        Exemplar += "Тиснение на крышках:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$i":
-                        Exemplar += "Тиснение на корешке:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$j":
-                        Exemplar += "Фурнитура:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$k":
-                        Exemplar += "Жуковины:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$l":
-                        Exemplar += "Форзац:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$m":
-                        Exemplar += "Обрез:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$n":
-                        Exemplar += "Состояние:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$o":
-                        Exemplar += "Футляр:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$p":
-                        Exemplar += "Тиснение на канте:" + r["PLAIN"].ToString() + "#";
-                        break;
-                    case "3300$r":
-                        Exemplar += "Примечание о переплете:" + r["PLAIN"].ToString() + "#";
-                        break;                    
-                }
-            }
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            JsonWriter writer = new JsonTextWriter(sw);
+
             
-            AddField(main, doc, "Exemplar", Exemplar);
+            //{"1":
+            //    {
+            //     "exemplar_location":"Абонемент",
+            //     "exemplar_collection":"ОФ",
+            //     "exemplar_placing_cipher":"08.B 4650",
+            //     "exemplar_carrier":"Бумага",
+            //     "exemplar_inventory_number":"2494125",
+            //     "exemplar_class_edition":"Для выдачи"
+            //    },
+            // "2":
+            //    {
+            //        "exemplar_location":"Абонемент",
+            //        "exemplar_collection":"ОФ",
+            //        "exemplar_placing_cipher":"08.B 4651",
+            //        "exemplar_carrier":"Бумага",
+            //        "exemplar_inventory_number":"2494126",
+            //        "exemplar_class_edition":"Для выдачи"
+            //    }
+            //}
 
 
-            Exemplar = "";
+            writer.WriteStartObject();
+
+            ds.Tables.Add("exemplar");
+            int cnt = 1;
+            //ser.Serialize(
+            foreach(DataRow iddata in ds.Tables["t"].Rows)
+            {
+                da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A" +
+                                                " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                                                " where A.IDDATA = " + iddata["IDDATA"];// + 
+                ds.Tables["exemplar"].Rows.Clear();
+                ds.Tables["exemplar"].Clear();
+                i = da.Fill(ds, "exemplar");
+
+                writer.WritePropertyName(cnt++.ToString());
+                writer.WriteStartObject();
+
+
+                
+                foreach (DataRow r in ds.Tables["exemplar"].Rows)
+                {
+                    string code = r["MNFIELD"].ToString()+r["MSFIELD"].ToString();
+                    switch (code)
+                    {
+                        case "899$a":
+                            writer.WritePropertyName("exemplar_location");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "482$a":
+                            //Exemplar += "Приплетено к:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_interlaced_to");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "899$b"://тут надо оставить только коллекции
+                            string fnd = r["PLAIN"].ToString();
+                            if ((fnd == "ОФ") || (fnd == "Фонд редкой книги") || (fnd == "Фонд Редкой книги") || (fnd == "ОФ - Восток"))//надо определить что коллекция, что фонд, а что на дом.
+                            {
+                                AddField(main, doc, "MethodOfAccess", "В помещении библиотеки");
+                                //Exemplar += "Доступ: Заказать через личный кабинет в зал библиотеки#";
+                                writer.WritePropertyName("Access");
+                                writer.WriteValue("Заказать через личный кабинет в зал библиотеки");
+                            }
+                            else
+                            {
+                                AddField(main, doc, "collection", r["PLAIN"].ToString());
+                                //Exemplar += "Доступ: Заказать через личный кабинет в зал библиотеки#";
+                                writer.WritePropertyName("Access");
+                                writer.WriteValue("Заказать через личный кабинет в зал библиотеки");
+                            }
+                            if (fnd == "Абонемент")
+                            {
+                                AddField(main, doc, "MethodOfAccess", "На дом");
+                                //Exemplar += "Доступ: Заказать через личный кабинет на дом#";
+                                writer.WritePropertyName("Access");
+                                writer.WriteValue("Заказать через личный кабинет на дом");
+                            }
+                            if ((fund == "BJFCC") || (fund == "BJACC") || (fund == "BRIT_SOVET") || (fund == "BJSCC"))
+                            {
+                                AddField(main, doc, "MethodOfAccess", "На дом");
+                                //break;//тут надо оставить только коллекции
+                                //Exemplar += "Доступ: Проследовать в указанный зал для получения на дом#";
+                                writer.WritePropertyName("Access");
+                                writer.WriteValue("Проследовать в указанный зал для получения на дом");
+                            }
+
+                            //Exemplar += "Наименование фонда или коллекции:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_collection");
+                            writer.WriteValue(r["PLAIN"].ToString());
+
+                            break;
+                        case "899$c":
+                            //Exemplar += "Местонахождение стеллажа:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_rack_location");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "899$d":
+                            //Exemplar += "Направление временного хранения:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_direction_temporary_storage");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "899$j":
+                            //Exemplar += "Расстановочный шифр:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_placing_cipher");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "899$p":
+                            //Exemplar += "Инвентарный номер:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_inventory_number");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "899$w":
+                            //Exemplar += "Штрихкод:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_barcode");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "899$x":
+                            //Exemplar += "Примечание к инвентарному номеру:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_inv_note");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "921$a":
+                            //Exemplar += "Носитель:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_carrier");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "921$c":
+                            //Exemplar += "Класс издания:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_class_edition");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "922$b":
+                            //Exemplar += "Трофей\\Принадлежность к:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_trophy");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$a":
+                            //Exemplar += "Вид переплёта:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_binding_kind");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$b":
+                            //Exemplar += "Век переплёта:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_binding_age");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$c":
+                            //Exemplar += "Тип переплёта:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_binding_type");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$d":
+                            //Exemplar += "Материал крышек:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_cover_material");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$e":
+                            //Exemplar += "Материал на крышках:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_material_on_cover");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$f":
+                            //Exemplar += "Материал корешка:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_spine_material");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$g":
+                            //Exemplar += "Бинты:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_bandages");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$h":
+                            //Exemplar += "Тиснение на крышках:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_stamping_on_cover");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$i":
+                            //Exemplar += "Тиснение на корешке:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_embossing_on_spine");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$j":
+                            //Exemplar += "Фурнитура:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_fittings");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$k":
+                            //Exemplar += "Жуковины:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_bugs");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$l":
+                            //Exemplar += "Форзац:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_forth");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$m":
+                            //Exemplar += "Обрез:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_cutoff");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$n":
+                            //Exemplar += "Состояние:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_condition");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$o":
+                            //Exemplar += "Футляр:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_case");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$p":
+                            //Exemplar += "Тиснение на канте:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_embossing_on_edge");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;
+                        case "3300$r":
+                            //Exemplar += "Примечание о переплете:" + r["PLAIN"].ToString() + "#";
+                            writer.WritePropertyName("exemplar_binding_note");
+                            writer.WriteValue(r["PLAIN"].ToString());
+                            break;                    
+                    }
+
+                }
+                //Exemplar += "exemplar_id:" + ds.Tables["t"].Rows[0]["IDDATA"].ToString() + "#";
+                writer.WritePropertyName("exemplar_id");
+                writer.WriteValue(iddata["IDDATA"].ToString());
+                writer.WriteEndObject();
+            }
+
+            //смотрим есть ли гиперссылка
             da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A" +
                     " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
                    " where A.MNFIELD = 940 and A.MSFIELD = '$a' and A.IDMAIN = " + IDMAIN;
             ds = new DataSet();
             i = da.Fill(ds, "t");
-            if (i != 0)
+            if (i != 0)//если есть - вставляем отдельным экземпляром.
             {
-                Exemplar += "Электронная копия: есть#";
-                Exemplar += "Гиперссылка: " + ds.Tables["t"].Rows[0]["PLAIN"].ToString() + " #";
-            }
-            if (fund == "BJVVV")
-            {
-                da.SelectCommand.CommandText = " select * from BookAddInf..ScanInfo A" +
-                " where A.IDBase = 1 and A.IDBook = " + IDMAIN;
-            }
-            if (fund == "REDKOSTJ")
-            {
-                da.SelectCommand.CommandText = " select * from BookAddInf..ScanInfo A" +
-                " where A.IDBase = 2 and A.IDBook = " + IDMAIN;
-            }
-            ds = new DataSet();
-            i = da.Fill(ds, "t");
-            if (i == 0) return;
-
-            Exemplar += "Авторское право: " + ((ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть");
-            Exemplar += "Ветхий оригинал: " + ((ds.Tables["t"].Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет");
-            Exemplar += "Наличие PDF версии: " + ((ds.Tables["t"].Rows[0]["PDF"].ToString() == "1") ? "да" : "нет");
-            Exemplar += "Доступ: Заказать через личный кабинет";
+                writer.WritePropertyName(cnt++.ToString());
+                writer.WriteStartObject();
 
 
+                //Exemplar += "Электронная копия: есть#";
+                writer.WritePropertyName("exemplar_electronic_copy");
+                writer.WriteValue("да");
+                //Exemplar += "Гиперссылка: " + ds.Tables["t"].Rows[0]["PLAIN"].ToString() + " #";
+                writer.WritePropertyName("exemplar_hyperlink");
+                writer.WriteValue(ds.Tables["t"].Rows[0]["PLAIN"].ToString());
+                if (fund == "BJVVV")
+                {
+                    da.SelectCommand.CommandText = " select * from BookAddInf..ScanInfo A" +
+                    " where A.IDBase = 1 and A.IDBook = " + IDMAIN;
+                }
+                if (fund == "REDKOSTJ")
+                {
+                    da.SelectCommand.CommandText = " select * from BookAddInf..ScanInfo A" +
+                    " where A.IDBase = 2 and A.IDBook = " + IDMAIN;
+                }
+                ds = new DataSet();
+                i = da.Fill(ds, "t");
+                if (i != 0)
+                {
+                    //Exemplar += "Авторское право: " + ((ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть");
+                    writer.WritePropertyName("exemplar_copyright");
+                    writer.WriteValue(((ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть"));
+                    //Exemplar += "Ветхий оригинал: " + ((ds.Tables["t"].Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет");
+                    writer.WritePropertyName("exemplar_old_original");
+                    writer.WriteValue(((ds.Tables["t"].Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет"));
+                    //Exemplar += "Наличие PDF версии: " + ((ds.Tables["t"].Rows[0]["PDF"].ToString() == "1") ? "да" : "нет");
+                    writer.WritePropertyName("exemplar_PDF_exists");
+                    writer.WriteValue(((ds.Tables["t"].Rows[0]["PDF"].ToString() == "1") ? "да" : "нет"));
+                    //Exemplar += "Доступ: Заказать через личный кабинет";
+                    writer.WritePropertyName("exemplar_access");
+                    writer.WriteValue("Для прочтения онлайн необходимо положить в корзину и заказать через личный кабинет");
+                }
+                writer.WriteEndObject();
+            }
+            writer.WriteEndObject();
+            writer.Flush();
+            writer.Close();
+
+            
+            AddField(main, doc, "Exemplar", sb.ToString());
 
 
         }
@@ -992,7 +1089,7 @@ namespace ExportBJ_XML
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
             da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
             da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT " +
                                " where IDMAIN = " +ParentPIN;
             DataSet ds = new DataSet();
@@ -1059,7 +1156,7 @@ namespace ExportBJ_XML
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
             da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
             da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT " +
                                " where MNFIELD = 225 and MSFIELD = '$a' and IDMAIN = " + ParentPIN;
             DataSet ds = new DataSet();
@@ -1122,7 +1219,7 @@ namespace ExportBJ_XML
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
             da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
             da.SelectCommand.CommandText = " select PLAIN from " + fund + ".."+AFTable+" A " +
                                " where IDAF = " + AFLinkId;
             DataSet ds = new DataSet();
@@ -1150,7 +1247,7 @@ namespace ExportBJ_XML
             da = new SqlDataAdapter();
             da.InsertCommand = new SqlCommand();
             da.InsertCommand.Connection = new SqlConnection();
-            da.InsertCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+            da.InsertCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
             da.InsertCommand.Connection.Open();
             StreamReader sr = new StreamReader(@"f:\Lib_100S25642.txt");
             string account;
@@ -1170,5 +1267,71 @@ namespace ExportBJ_XML
 
 
         }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (sw == null) return;
+            Application.DoEvents();
+            label1.Text = "Потрачено: " + sw.Elapsed.Days.ToString() + " дней " + sw.Elapsed.Hours.ToString() + " часов " + sw.Elapsed.Minutes.ToString() + " минут " + sw.Elapsed.Seconds.ToString() + " секунд ";
+        }
     }
 }
+//string litresFile = @"f:\csv_litres_exp_873.csv";
+
+//DataTable Litres = ConvertCSVtoDataTable(litresFile);
+//string allFields = "";
+
+//foreach (DataRow row in Litres.Rows)
+//{
+
+//    foreach (DataColumn col in Litres.Columns)
+//    {
+//        switch (col.ColumnName)
+//        {
+//            case "ID книги":
+
+
+//                //allFields = allFields + " "+row[col.ColumnName].ToString();
+//                break;
+//            case "Название":
+//                AddField(main, doc, "title", row[col.ColumnName].ToString());
+//                AddField(main, doc, "title_short", row[col.ColumnName].ToString());
+//                allFields = allFields + " " + row[col.ColumnName].ToString();
+//                break;
+//            case "Авторы":
+//                AddField(main, doc, "author", row[col.ColumnName].ToString());
+//                AddField(main, doc, "author_sort", row[col.ColumnName].ToString());
+//                allFields = allFields + " " + row[col.ColumnName].ToString();
+
+//                break;
+//            case "ISBN":
+//                AddField(main, doc, "isbn", row[col.ColumnName].ToString());
+//                allFields = allFields + " " + row[col.ColumnName].ToString();
+
+//                break;
+//            case "Издательство":
+//                AddField(main, doc, "publisher", row[col.ColumnName].ToString());
+//                allFields = allFields + " " + row[col.ColumnName].ToString();
+//                break;
+//            case "Год":
+//                AddField(main, doc, "publishDate", row[col.ColumnName].ToString());
+//                allFields = allFields + " " + row[col.ColumnName].ToString();
+//                break;
+//            case "Жанры":
+//                AddField(main, doc, "genre", row[col.ColumnName].ToString());
+//                allFields = allFields + " " + row[col.ColumnName].ToString();
+//                break;
+
+//        }
+//    }
+//    AddField(main, doc, "id", "litres_" + row["ID книги"].ToString());
+//    AddField(main, doc, "fund", GetRusFund("litres"));
+//    AddField(main, doc, "allfields", allFields);
+//    allFields = "";
+
+//    doc.WriteTo(objXmlWriter);
+//    doc = main.CreateElement("doc");
+//    label2.Text = "litres_" + row["ID книги"].ToString();
+//    Application.DoEvents();
+
+//}
