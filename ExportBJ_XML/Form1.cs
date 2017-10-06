@@ -13,6 +13,7 @@ using System.Security;
 using System.Xml.Linq;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 namespace ExportBJ_XML
 {
     public partial class Form1 : Form
@@ -43,7 +44,7 @@ namespace ExportBJ_XML
                 //root.WriteTo(objXmlWriter);
 
                 XmlNode doc = main.CreateElement("doc");
-                int step = 300;
+                int step = 100;
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////BJVVV/////////////////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +52,7 @@ namespace ExportBJ_XML
                 for (int i = 1; i < MaxIDMAIN_BJVVV; i += step)
                 {
                     string q = GetQuery("BJVVV", i);
-                    int check = CreateBJDocs("BJVVV", q, main, doc, root, objXmlWriter);
+                    int check = CreateBJDoc("BJVVV", q, main, doc, root, objXmlWriter);
                     if (check == 1) continue;
                     doc.WriteTo(objXmlWriter);
                     doc = main.CreateElement("doc");
@@ -67,7 +68,7 @@ namespace ExportBJ_XML
                 for (int i = 1; i < MaxIDMAIN_REDKOSTJ; i += step)
                 {
                     string q = GetQuery("REDKOSTJ", i);
-                    int check = CreateBJDocs("REDKOSTJ", q, main, doc, root, objXmlWriter);
+                    int check = CreateBJDoc("REDKOSTJ", q, main, doc, root, objXmlWriter);
                     if (check == 1) continue;
                     //doc.WriteTo(objXmlWriter);
                     doc = main.CreateElement("doc");
@@ -83,7 +84,7 @@ namespace ExportBJ_XML
                 for (int i = 1; i < MaxIDMAIN_ACC; i += step)
                 {
                     string q = GetQuery("BJACC", i);
-                    int check = CreateBJDocs("BJACC", q, main, doc, root, objXmlWriter);
+                    int check = CreateBJDoc("BJACC", q, main, doc, root, objXmlWriter);
                     if (check == 1) continue;
                     //doc.WriteTo(objXmlWriter);
                     doc = main.CreateElement("doc");
@@ -99,7 +100,7 @@ namespace ExportBJ_XML
                 for (int i = 1; i < MaxIDMAIN_FCC; i += step)
                 {
                     string q = GetQuery("BJFCC", i);
-                    int check = CreateBJDocs("BJFCC", q, main, doc, root, objXmlWriter);
+                    int check = CreateBJDoc("BJFCC", q, main, doc, root, objXmlWriter);
                     if (check == 1) continue;
                     //doc.WriteTo(objXmlWriter);
                     doc = main.CreateElement("doc");
@@ -115,7 +116,7 @@ namespace ExportBJ_XML
                 for (int i = 1; i < MaxIDMAIN_BRIT; i += step)
                 {
                     string q = GetQuery("BRIT_SOVET", i);
-                    int check = CreateBJDocs("BRIT_SOVET", q, main, doc, root, objXmlWriter);
+                    int check = CreateBJDoc("BRIT_SOVET", q, main, doc, root, objXmlWriter);
                     if (check == 1) continue;
                     //doc.WriteTo(objXmlWriter);
                     doc = main.CreateElement("doc");
@@ -131,9 +132,9 @@ namespace ExportBJ_XML
                 for (int i = 1; i < MaxIDMAIN_SCC; i += step)
                 {
                     string q = GetQuery("BJSCC", i);
-                    int check = CreateBJDocs("BJSCC", q, main, doc, root, objXmlWriter);
+                    int check = CreateBJDoc("BJSCC", q, main, doc, root, objXmlWriter);
                     if (check == 1) continue;
-                    doc.WriteTo(objXmlWriter);
+                    //doc.WriteTo(objXmlWriter);
                     doc = main.CreateElement("doc");
                     label2.Text = "BJSCC_" + i;
                     Application.DoEvents();
@@ -145,7 +146,7 @@ namespace ExportBJ_XML
                 XmlDocument litres = new XmlDocument();
                 //litres.Load(@"f:\api_litres.xml");
                 //int y = litres.ChildNodes.Count;
-
+#region PERIOD
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////PERIOD/////////////////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +165,7 @@ namespace ExportBJ_XML
                     string pin = row["POLE"].ToString();
                     if (pin == "")
                         continue;
-                    if ((Convert.ToInt32(row["POLE"]) < 2258) || (Convert.ToInt32(row["POLE"]) > 2308))
+                    if ((Convert.ToInt32(row["POLE"]) < 2305) || (Convert.ToInt32(row["POLE"]) > 2308))
                     {
                         continue;
                     }
@@ -248,11 +249,79 @@ namespace ExportBJ_XML
                     doc = main.CreateElement("doc");
                     label2.Text = "period_" + row["POLE"];
                     Application.DoEvents();
+                }
+#endregion
+                /////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////Pearson////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////
+
+                string Pearson = File.ReadAllText(@"f:/pearson.json");
+
+                JArray desPearson = (JArray)JsonConvert.DeserializeObject(Pearson);
+
+                string tmp = desPearson.First["licensePackage"].ToString();
+                tmp = desPearson.First["catalog"]["options"]["Supported platforms"].ToString();
+                cnt = 1;
+                foreach (JToken token in desPearson)
+                {
+                    AddField(main, doc, "id", token["id"].ToString());
+                    AddField(main, doc, "title", token["catalog"]["title"]["default"].ToString());
+                    AddField(main, doc, "title_short", token["catalog"]["title"]["default"].ToString());
+                    AddField(main, doc, "author", token["catalog"]["options"]["Authors"].ToString());
+                    AddField(main, doc, "Country", token["catalog"]["options"]["Country of publication"].ToString());
+                    AddField(main, doc, "publisher", token["catalog"]["options"]["Publisher"].ToString());
+                    AddField(main, doc, "publishDate", token["catalog"]["options"]["Publishing date"].ToString().Split('.')[2]);
+                    AddField(main, doc, "isbn", token["catalog"]["options"]["ISBN"].ToString());
+                    AddField(main, doc, "Volume", token["catalog"]["options"]["Number of pages"].ToString());
+                    AddField(main, doc, "description", token["catalog"]["options"]["Desk"].ToString() + " ; " +
+                                                  token["catalog"]["description"]["default"].ToString());
+                    AddField(main, doc, "genre", token["catalog"]["options"]["Subject"].ToString());
+                    AddField(main, doc, "topic", token["catalog"]["options"]["Catalogue section"].ToString());
+                    AddField(main, doc, "collection", token["catalog"]["options"]["Collection"].ToString());
+                    AddField(main, doc, "language", token["catalog"]["options"]["Language"].ToString());
 
 
+                    //описание экземпляра Пирсон
+                    StringBuilder sb = new StringBuilder();
+                    StringWriter strwriter = new StringWriter(sb);
+                    JsonWriter writer = new JsonTextWriter(strwriter);
+
+                    writer.WriteStartObject();
+                    writer.WritePropertyName("1");
+                    writer.WriteStartObject();
+
+                    writer.WritePropertyName("exemplar_carrier");
+                    writer.WriteValue("Электронная книга");
+                    writer.WritePropertyName("exemplar_access");
+                    writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
+                    writer.WritePropertyName("exemplar_hyperlink");
+                    writer.WriteValue("http://не сформирован");
+                    writer.WritePropertyName("exemplar_copyright");
+                    writer.WriteValue("Да");
+                    
+                    writer.WriteEndObject();
+                    writer.WriteEndObject();
+
+
+                    AddField(main, doc, "MethodOfAccess", "Удалённый доступ");
+                    AddField(main, doc, "Exemplar", sb.ToString());
+                    AddField(main, doc, "id", "Pearson_"+token["id"].ToString());
+                    AddField(main, doc, "HyperLink", "http://не сформирован");
+                    AddField(main, doc, "fund", "Pearson");
+
+
+                    doc.WriteTo(objXmlWriter);
+                    doc = main.CreateElement("doc");
+                    label2.Text = "Pearson_" + cnt++;
+                    Application.DoEvents();
                 }
 
 
+
+
+                /////////////////////////////////////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////
                 sw.Stop();
                 label1.Text = "Закончено. Потрачено: " + sw.Elapsed.Days.ToString() + " дней " + sw.Elapsed.Hours.ToString() + " часов " + sw.Elapsed.Minutes.ToString() + " минут " + sw.Elapsed.Seconds.ToString() + " секунд ";
                 label4.Text = "Закочено в "+DateTime.Now.Hour + ":" + DateTime.Now.Minute + ":" + DateTime.Now.Second;
@@ -260,6 +329,7 @@ namespace ExportBJ_XML
                 //Close();
             }
         }
+
         private string GetQuery(string baza, int count)
         {
            return "select A.*,cast(A.MNFIELD as nvarchar(10))+A.MSFIELD code,A.SORT,B.PLAIN, "+
@@ -280,7 +350,7 @@ namespace ExportBJ_XML
                    //" where A.IDMAIN between " + count + " and " + (count + 999).ToString() +//типа для ускорения, но можно явно пин указать же. не помню.
                    " where A.IDMAIN = " + count + 
                 //" and exists (select 1 from BRIT_SOVET..DATAEXT C where A.IDMAIN = C.IDMAIN and C.MNFIELD = 899 and C.MSFIELD = '$p')" +
-                   " order by IDMAIN";
+                   " order by IDMAIN, IDDATA";
         }
         private int GetMaxIDMAIN(string p)
         {
@@ -295,32 +365,13 @@ namespace ExportBJ_XML
         }
         public void AddField(XmlDocument main,XmlNode doc_, string name,string val)
         {
-            
             XmlNode field = main.CreateElement("field");
             XmlAttribute att = main.CreateAttribute("name");
             att.Value = name;
             field.Attributes.Append(att);
-            //field.InnerText = SecurityElement.Escape(val);
-            //if (val.Contains("Tendances dans l'economie mondiale;"))
-            //{
-            //    field.InnerText = SecurityElement.Escape(val);
-            //    //field.Value = SecurityElement.Escape(val);
-            //    //val = XmlConvert.EncodeName(val);
-
-            //}
-            //XElement xe = new XElement("dummy", val);
-            //field.InnerText = xe.Value;
-            //val = val.Replace("\\0", "").Replace("/","");
             field.InnerText = SecurityElement.Escape(val);
-            //field.Value = SecurityElement.Escape(val);
-            //val = XmlConvert.EncodeName(val);
             val = XmlCharacterWhitelist(val);
-            field.InnerText = val;
-            //XNode xn = 
-
-            //field.InnerText = val.Replace("&", "").Replace("\v", "").Replace("#","");
-            //XmlElement xe = new XmlElement();
-            
+            field.InnerText = val;           
             doc_.AppendChild(field);
         }
         public static string XmlCharacterWhitelist(string in_string)
@@ -344,7 +395,7 @@ namespace ExportBJ_XML
             }
             return sbOutput.ToString();
         }
-        public int CreateBJDocs(string fund, string query,XmlDocument main,XmlNode doc,XmlNode root, XmlWriter objXmlWriter)
+        public int CreateBJDoc(string fund, string query,XmlDocument main,XmlNode doc,XmlNode root, XmlWriter objXmlWriter)
         {
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
@@ -639,6 +690,7 @@ namespace ExportBJ_XML
                         break;
                     case "225$a":
                         if (r["PLAIN"].ToString() == "") break;
+                        if (r["PLAIN"].ToString() == "-1") break;
                         AddHierarchyFields(r["PLAIN"].ToString(), main, fund, doc, r["IDMAIN"].ToString());
                         //AddField(main, doc, "", r["PLAIN"].ToString());
                         break;
@@ -767,8 +819,6 @@ namespace ExportBJ_XML
             return "<неизвестный фонд>";
         }
 
-        string ExemplarsCurrentIDMAIN = "";
-        string Exemplar = "";
         private void AddExemplarFields(string idmain, XmlDocument main, string fund, XmlNode doc)
         {
 
@@ -785,12 +835,6 @@ namespace ExportBJ_XML
 
             if (i == 0) return;
             string IDMAIN = ds.Tables["t"].Rows[0]["IDMAIN"].ToString();
-
-            //if (IDMAIN != ExemplarsCurrentIDMAIN)
-            //{
-            //    Exemplar = "";
-            //    ExemplarsCurrentIDMAIN = IDMAIN;
-            //}
 
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
@@ -1070,7 +1114,13 @@ namespace ExportBJ_XML
                     writer.WriteValue(((ds.Tables["t"].Rows[0]["PDF"].ToString() == "1") ? "да" : "нет"));
                     //Exemplar += "Доступ: Заказать через личный кабинет";
                     writer.WritePropertyName("exemplar_access");
-                    writer.WriteValue("Для прочтения онлайн необходимо положить в корзину и заказать через личный кабинет");
+                    writer.WriteValue(
+                        (ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ? 
+                        "Для прочтения онлайн необходимо перейти по ссылке" :
+                        "Для прочтения онлайн необходимо положить в корзину и заказать через личный кабинет");
+                    writer.WritePropertyName("exemplar_carrier");
+                    writer.WriteValue("Электронная книга");
+
                 }
                 writer.WriteEndObject();
             }
@@ -1078,7 +1128,8 @@ namespace ExportBJ_XML
             writer.Flush();
             writer.Close();
 
-            
+            AddField(main, doc, "MethodOfAccess", "Удалённый доступ");
+
             AddField(main, doc, "Exemplar", sb.ToString());
 
 
@@ -1104,8 +1155,11 @@ namespace ExportBJ_XML
                                " where A.IDMAIN = " +TopHierarchyId +" and MNFIELD = 200 and MSFIELD = '$a' ";
             ds = new DataSet();
             i = da.Fill(ds, "t");
-            string hierarchy_top_title = ds.Tables["t"].Rows[0]["PLAIN"].ToString();
-            AddField(main, doc, "hierarchy_top_title", hierarchy_top_title);
+            if (i != 0)
+            {
+                string hierarchy_top_title = ds.Tables["t"].Rows[0]["PLAIN"].ToString();
+                AddField(main, doc, "hierarchy_top_title", hierarchy_top_title);
+            }
 
             AddField(main, doc, "hierarchy_parent_id", fund + "_" + ParentPIN);
 
