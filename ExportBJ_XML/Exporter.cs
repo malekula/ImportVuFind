@@ -36,24 +36,25 @@ namespace ExportBJ_XML
         {
             int step = 1;
             int MaxIDMAIN = GetMaxIDMAIN(fund);
+            List<string> errors = new List<string>();
             for (int i = previous; i < MaxIDMAIN; i += step)
             {
                 _lastID = i; 
-                string q = GetQuery(fund, i);
+                string query = GetQuery(fund, i);
+                DataTable record = ExecuteQuery(query);
                 try
                 {
-                    int check = CreateBJDoc(fund, q);
+                    int check = CreateBJDoc(fund, record);
                     if (check == 1) continue;
                 }
                 catch (Exception ex)
                 {
                     _f1.textBox1.Text += DateTime.Now.ToShortTimeString() + " - " + ex.Message + " ;\r\n ";
-
-                    Thread.Sleep(5000);
+                    //здесь записать пин в файл ошибок и продолжить.
+                    errors.Add(fund + "_" + i);
                     _doc = _exportDocument.CreateElement("doc");
-                    this.StartExportFrom(fund, _lastID);
+                    continue;
                 }
-
 
                 _doc.WriteTo(_objXmlWriter);
                 _doc = _exportDocument.CreateElement("doc");
@@ -64,12 +65,13 @@ namespace ExportBJ_XML
 
             _objXmlWriter.Flush();
             _objXmlWriter.Close();
+            File.WriteAllLines(@"f:\import\importErrors\" + fund + "Errors.txt", errors.ToArray());
 
         }
 
         public void ExportSingleRecord(string fund, int idmain)
         {
-            _objXmlWriter = XmlTextWriter.Create(@"F:\import\" + fund + idmain + ".xml");
+            _objXmlWriter = XmlTextWriter.Create(@"F:\import\" + fund + "_" + idmain + ".xml");
 
             _exportDocument = new XmlDocument();
             XmlNode decalrationNode = _exportDocument.CreateXmlDeclaration("1.0", "UTF-8", null);
@@ -85,7 +87,8 @@ namespace ExportBJ_XML
             //////////////////////////////////TEST/////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////
             string q = GetQuery(fund, idmain);
-            int check = CreateBJDoc(fund, q);
+            DataTable table = ExecuteQuery(q);
+            int check = CreateBJDoc(fund, table);
             if (check == 1) return;
             _doc.WriteTo(_objXmlWriter);
             _doc = _exportDocument.CreateElement("doc");
@@ -111,7 +114,7 @@ namespace ExportBJ_XML
             /////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////BJVVV/////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////
-            _lastID = 1449310;
+            _lastID = 1;
             this.StartExportFrom("BJVVV", _lastID);
 
             //1449336 - экземпляры не выгружаются.
@@ -431,8 +434,55 @@ namespace ExportBJ_XML
         #endregion
 
 
-        
-        
+
+        public void GetLitresData()
+        {
+            //внимание! Timestamp нужен от текущего времени, а не от чекпоинта! SHA генерируется тоже от текущего времени, а не от чекпоинта
+            string stamp = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds.ToString();
+            string key = "geqop45m))AZvb23zerhgjj76cvc##PFbbfqorptqskj";
+            DateTime checkpointDate = new DateTime(2013, 1, 1, 0, 0, 0);
+            string checkpoint = checkpointDate.ToString("yyyy-MM-dd HH:mm:ss");//"2017-01-01 00:00:00";
+            string endpoint = checkpointDate.AddMonths(1).ToString("yyyy-MM-dd HH:mm:ss");
+
+            string inputString = stamp + ":" + key + ":" + checkpoint;
+            string sha256 = Exporter.sha256(inputString);
+
+
+            Uri apiUrl =
+            new Uri("http://partnersdnld.litres.ru/get_fresh_book/?checkpoint=" + checkpoint +
+                                                                 "&place=GTCTL" +
+                                                                 "&timestamp=" + stamp +
+                                                                 "&sha=" + sha256);
+            //"&enpoint="+endpoint);
+            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;// | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
+            HttpWebRequest request = HttpWebRequest.Create(apiUrl) as HttpWebRequest;
+            request.Timeout = 120000000;
+            request.KeepAlive = true;
+            request.ProtocolVersion = HttpVersion.Version10;
+            request.ServicePoint.ConnectionLimit = 24;
+
+            HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+
+            XDocument xdoc = XDocument.Load(new StreamReader(response.GetResponseStream()));
+
+            //читать простым текстом по частям
+            //using (Stream output = File.OpenWrite("litres.dat"))
+            //using (Stream input = response.GetResponseStream())
+            //{
+            //    byte[] buffer = new byte[8192];
+            //    int bytesRead;
+            //    while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            //    {
+            //        output.Write(buffer, 0, bytesRead);
+            //    }
+            //}
+
+            XmlWriter writ = XmlTextWriter.Create(@"F:\litres_source.xml");
+            xdoc.WriteTo(writ);
+            writ.Flush();
+            writ.Close();
+        }
         public void Litres()
         {
             /////////////////////////////////////////////////////////////////////////////////////////////*/
@@ -450,86 +500,33 @@ namespace ExportBJ_XML
 
 
 
-
-            //внимание! Timestamp нужен от текущего времени, а не от чекпоинта! SHA генерируется тоже от текущего времени, а не от чекпоинта
-
-
-            
-            string stamp = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds.ToString();
-            string key = "geqop45m))AZvb23zerhgjj76cvc##PFbbfqorptqskj";
-            DateTime checkpointDate = new DateTime(2013, 1, 1, 0, 0, 0);
-            string checkpoint= checkpointDate.ToString("yyyy-MM-dd HH:mm:ss");//"2017-01-01 00:00:00";
-            string endpoint = checkpointDate.AddMonths(1).ToString("yyyy-MM-dd HH:mm:ss");
-
-            string inputString = stamp + ":" + key + ":" + checkpoint;
-            string sha256 = Exporter.sha256(inputString);
-
-
-            Uri apiUrl =
-            new Uri("http://partnersdnld.litres.ru/get_fresh_book/?checkpoint=" + checkpoint +
-                                                                 "&place=GTCTL" +
-                                                                 "&timestamp=" + stamp +
-                                                                 "&sha=" + sha256);
-                                                                 //"&enpoint="+endpoint);
-
-
-
-
-
-
-            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;// | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-
-            HttpWebRequest request = HttpWebRequest.Create(apiUrl) as HttpWebRequest;
-            request.Timeout = 120000000;
-            request.KeepAlive = true;
-            request.ProtocolVersion = HttpVersion.Version10;
-            request.ServicePoint.ConnectionLimit = 24;
-
-            HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-
-            XDocument xdoc = XDocument.Load(new StreamReader(response.GetResponseStream()));
-
-
-            //читать простым текстом по частям
-            //using (Stream output = File.OpenWrite("litres.dat"))
-            //using (Stream input = response.GetResponseStream())
-            //{
-            //    byte[] buffer = new byte[8192];
-            //    int bytesRead;
-            //    while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
-            //    {
-            //        output.Write(buffer, 0, bytesRead);
-            //    }
-            //}
-
-
-          
-            
-            
-            XmlWriter writ = XmlTextWriter.Create(@"F:\litres_source.xml");
-            xdoc.WriteTo(writ);
-            writ.Flush();
-            writ.Close();
-
-
-            
-
-            xdoc = XDocument.Load(@"f:\fresh.litres.ru.xml");
+            XDocument xdoc = XDocument.Load(@"f:\litres_source.xml");
 
 
             var books = xdoc.Descendants("updated-book");
             int cnt = 1;
-
+            string work = "";
             foreach (XElement elt in books)
             {
                 AddField("title", elt.Element("title-info").Element("book-title").Value);
+
                 AddField("HyperLink", elt.Element("document-info").Element("src-url").Value);
-                AddField("author", elt.Element("title-info").Element("author").Element("last-name").Value + " " +
-                        elt.Element("title-info").Element("author").Element("first-name").Value
-                        //+ " " +
-                        //elt.Element("title-info").Element("author").Element("middle-name").Value
-                        );
-                
+
+
+                if (elt.Element("title-info").Element("author").Element("last-name") != null)
+                {
+                    work += elt.Element("title-info").Element("author").Element("last-name") + " ";
+                }
+                if (elt.Element("title-info").Element("author").Element("first-name") != null)
+                {
+                    work += elt.Element("title-info").Element("author").Element("first-name") + " ";
+                }
+                if (elt.Element("title-info").Element("author").Element("middle-name") != null)
+                {
+                    work += elt.Element("title-info").Element("author").Element("middle-name");
+                }
+
+                AddField("author", work);
                 
                 
                 //описание экземпляра Litres
@@ -604,7 +601,8 @@ namespace ExportBJ_XML
                     " order by IDMAIN, IDDATA";
         }
 
-        public int CreateBJDoc(string fund, string query)
+
+        public DataTable ExecuteQuery(string query)
         {
             SqlDataAdapter da = new SqlDataAdapter();
             da.SelectCommand = new SqlCommand();
@@ -612,16 +610,35 @@ namespace ExportBJ_XML
             da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
             da.SelectCommand.CommandText = query;
             DataSet ds = new DataSet();
-            ds.Tables.Add("clarify");
-            int i = da.Fill(ds, "t");
-            if (i == 0) return 1;
-            string CurrentIDMAIN = ds.Tables["t"].Rows[0]["IDMAIN"].ToString();
-            string Level = ds.Tables["t"].Rows[0]["Level"].ToString();
+            while (true)
+            {
+                try
+                {
+                    da.Fill(ds, "t");
+                    break;
+                }
+                catch (SqlException ex)
+                {
+                    _f1.textBox1.Text += DateTime.Now.ToShortTimeString() + " - " + ex.Message + " ;\r\n ";
+                    Application.DoEvents();
+                    Thread.Sleep(5000);
+                    continue;
+                }
+            }
+            return ds.Tables["t"];
+        }
+
+        public int CreateBJDoc(string fund, DataTable BJBook)
+        {
+            string currentIDMAIN = BJBook.Rows[0]["IDMAIN"].ToString();
+            string level = BJBook.Rows[0]["Level"].ToString();
             string allFields = "";
             string AF_all = "";
             bool wasTitle = false;//встречается ошибка: два заглавия в одном пине
             string description = "";//все 3хх поля
-            foreach (DataRow r in ds.Tables["t"].Rows)
+            DataTable clarify;
+            string query = "";
+            foreach (DataRow r in BJBook.Rows)
             {
 
                 allFields += " " + r["PLAIN"].ToString();
@@ -661,15 +678,14 @@ namespace ExportBJ_XML
                         AddField( "genre", r["PLAIN"].ToString());
                         break;
                     case "10$a":
-                        da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A " +
+                        query = " select * from " + fund + "..DATAEXT A " +
                            " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
                            " where A.MNFIELD = 10 and A.MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
-                        ds.Tables["clarify"].Clear();
-                        int j = da.Fill(ds, "clarify");
+                        clarify = ExecuteQuery(query);
                         string add = r["PLAIN"].ToString();
-                        if (j != 0)
+                        if (clarify.Rows.Count != 0)
                         {
-                            add = r["PLAIN"].ToString() + " (" + ds.Tables["clarify"].Rows[0]["PLAIN"].ToString() + ")";
+                            add = r["PLAIN"].ToString() + " (" + clarify.Rows[0]["PLAIN"].ToString() + ")";
                         }
                         AddField( "isbn", add);
                         break;
@@ -677,17 +693,15 @@ namespace ExportBJ_XML
                         AddField( "issn", r["PLAIN"].ToString());
                         break;
                     case "101$a":
-                        da.SelectCommand.CommandText = " select NAME from " + fund + "..LIST_1 " +
-                           " where ID = " + r["IDINLIST"].ToString();
-                        ds.Tables["clarify"].Rows.Clear();
-                        j = da.Fill(ds, "clarify");
-                        if (j == 0)
+                        query = " select NAME from " + fund + "..LIST_1 " + " where ID = " + r["IDINLIST"].ToString();
+                        clarify = ExecuteQuery(query);
+                        if (clarify.Rows.Count == 0)
                         {
                             AddField( "language", r["PLAIN"].ToString());
                         }
                         else
                         {
-                            AddField( "language", ds.Tables["clarify"].Rows[0]["NAME"].ToString());
+                            AddField( "language", clarify.Rows[0]["NAME"].ToString());
                         }
                         break;
                     case "2100$d":
@@ -697,14 +711,13 @@ namespace ExportBJ_XML
                         AddField( "publisher", r["PLAIN"].ToString());
                         break;
                     case "517$a":
-                        da.SelectCommand.CommandText = " select B.PLAIN from " + fund + "..DATAEXT A " +
-                                                       " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                                       " where MNFIELD = 517 and MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
-                        ds.Tables["clarify"].Clear();
-                        j = da.Fill(ds, "clarify");
-                        if (j != 0)
+                        query = " select B.PLAIN from " + fund + "..DATAEXT A " +
+                                " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
+                                " where MNFIELD = 517 and MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
+                        clarify = ExecuteQuery(query);
+                        if (clarify.Rows.Count != 0)
                         {
-                            AddField( "title_alt", "(" + ds.Tables["clarify"].Rows[0]["PLAIN"].ToString() + ")" + r["PLAIN"].ToString());
+                            AddField( "title_alt", "(" + clarify.Rows[0]["PLAIN"].ToString() + ")" + r["PLAIN"].ToString());
                         }
                         else
                         {
@@ -802,32 +815,29 @@ namespace ExportBJ_XML
                         string PublicationInfo = r["PLAIN"].ToString();
 
                         // 205$b
-                        da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A " +
-                                                       " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                                       " where A.MNFIELD = 205 and A.MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
-                        ds.Tables["clarify"].Clear();
-                        j = da.Fill(ds, "clarify");
-                        foreach (DataRow rr in ds.Tables["clarify"].Rows)
+                        query = " select * from " + fund + "..DATAEXT A " +
+                                " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
+                                " where A.MNFIELD = 205 and A.MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
+                        clarify = ExecuteQuery(query);
+                        foreach (DataRow rr in clarify.Rows)
                         {
                             PublicationInfo += "; " + rr["PLAIN"].ToString();
                         }
                         // 205$f
-                        da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A " +
-                                                       " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                                       " where A.MNFIELD = 205 and A.MSFIELD = '$f' and A.IDDATA = " + r["IDDATA"].ToString();
-                        ds.Tables["clarify"].Clear();
-                        j = da.Fill(ds, "clarify");
-                        foreach (DataRow rr in ds.Tables["clarify"].Rows)
+                        query = " select * from " + fund + "..DATAEXT A " +
+                                " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
+                                " where A.MNFIELD = 205 and A.MSFIELD = '$f' and A.IDDATA = " + r["IDDATA"].ToString();
+                        clarify = ExecuteQuery(query);
+                        foreach (DataRow rr in clarify.Rows)
                         {
                             PublicationInfo += " / " + rr["PLAIN"].ToString();
                         }
                         // 205$g
-                        da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A " +
-                                                       " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                                       " where A.MNFIELD = 205 and A.MSFIELD = '$g' and A.IDDATA = " + r["IDDATA"].ToString();
-                        ds.Tables["clarify"].Clear();
-                        j = da.Fill(ds, "clarify");
-                        foreach (DataRow rr in ds.Tables["clarify"].Rows)
+                        query = " select * from " + fund + "..DATAEXT A " +
+                                " left join " + fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
+                                " where A.MNFIELD = 205 and A.MSFIELD = '$g' and A.IDDATA = " + r["IDDATA"].ToString();
+                        clarify = ExecuteQuery(query);
+                        foreach (DataRow rr in clarify.Rows)
                         {
                             PublicationInfo += "; " + rr["PLAIN"].ToString();
                         }
@@ -899,8 +909,7 @@ namespace ExportBJ_XML
                     case "225$a":
                         if (r["PLAIN"].ToString() == "") break;
                         if (r["PLAIN"].ToString() == "-1") break;
-                        AddHierarchyFields(r["PLAIN"].ToString(), _exportDocument, fund, _doc, r["IDMAIN"].ToString());
-                        //AddField( "", r["PLAIN"].ToString());
+                        AddHierarchyFields(r["PLAIN"].ToString(), fund, r["IDMAIN"].ToString());
                         break;
                     case "225$h":
                         AddField( "NumberInSeries", r["PLAIN"].ToString());
@@ -933,16 +942,15 @@ namespace ExportBJ_XML
                         AddField( "Location", "Удалённый доступ");
                         break;
                     case "606$a"://"""""" • """"""
-                        da.SelectCommand.CommandText = "select * " +
-                                                       " from BJVVV..TPR_CHAIN A " +
-                                                       " left join BJVVV..TPR_TES B on A.IDTES = B.ID " +
-                                                       " where A.IDCHAIN = " + r["SORT"].ToString() +
-                                                       " order by IDORDER";
-                        ds.Tables["clarify"].Clear();
-                        j = da.Fill(ds, "clarify");
-                        if (j == 0) break;
+                        query = "select * " +
+                                " from BJVVV..TPR_CHAIN A " +
+                                " left join BJVVV..TPR_TES B on A.IDTES = B.ID " +
+                                " where A.IDCHAIN = " + r["SORT"].ToString() +
+                                " order by IDORDER";
+                        clarify = ExecuteQuery(query);
+                        if (clarify.Rows.Count == 0) break;
                         string TPR = "";
-                        foreach (DataRow rr in ds.Tables["clarify"].Rows)
+                        foreach (DataRow rr in clarify.Rows)
                         {
                             TPR += rr["VALUE"].ToString() + "•";
                         }
@@ -978,20 +986,20 @@ namespace ExportBJ_XML
                 }
 
             }
-            AddField( "id", fund + "_" + CurrentIDMAIN);
+            AddField( "id", fund + "_" + currentIDMAIN);
 
             string rusFund = GetRusFund(fund);
 
             AddField( "fund", rusFund);
             AddField( "allfields", allFields);
-            AddField( "Level", Level);
+            AddField( "Level", level);
 
             if (description != "")
             {
                 AddField( "description", description);
             }
 
-            AddExemplarFields(CurrentIDMAIN, _exportDocument, fund);
+            AddExemplarFields(currentIDMAIN, _exportDocument, fund);
 
             description = "";
 
@@ -1007,16 +1015,11 @@ namespace ExportBJ_XML
             //DEL: (5) Источник списания
             //GEO: (6) Географическое название
 
-            SqlDataAdapter da = new SqlDataAdapter();
-            da.SelectCommand = new SqlCommand();
-            da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
-            da.SelectCommand.CommandText = " select PLAIN from " + fund + ".." + AFTable + " A " +
+            string query = " select PLAIN from " + fund + ".." + AFTable + " A " +
                                " where IDAF = " + AFLinkId;
-            DataSet ds = new DataSet();
-            int i = da.Fill(ds, "t");
+            DataTable table = ExecuteQuery(query);
             string Another_author_AF_all = "";
-            foreach (DataRow r in ds.Tables["t"].Rows)
+            foreach (DataRow r in table.Rows)
             {
                 Another_author_AF_all += r["PLAIN"].ToString() + " ";
             }
@@ -1026,19 +1029,13 @@ namespace ExportBJ_XML
         private void AddExemplarFields(string idmain, XmlDocument _exportDocument, string fund)
         {
 
-            SqlDataAdapter da = new SqlDataAdapter();
-            da.SelectCommand = new SqlCommand();
-            da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A" +
-                                            " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                                            " where A.IDMAIN = " + idmain + " and A.MNFIELD = 899 and A.MSFIELD = '$p' " +
-                                            " and not exists (select 1 from BJVVV..DATAEXT C where C.IDDATA = A.IDDATA and C.MNFIELD = 921 and C.MSFIELD = '$c' and C.SORT = 'Списано')";
-            DataSet ds = new DataSet();
-            int i = da.Fill(ds, "t");
-
-            if (i == 0) return;
-            string IDMAIN = ds.Tables["t"].Rows[0]["IDMAIN"].ToString();
+            string query =  " select * from " + fund + "..DATAEXT A" +
+                            " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                            " where A.IDMAIN = " + idmain + " and A.MNFIELD = 899 and A.MSFIELD = '$p' " +
+                            " and not exists (select 1 from BJVVV..DATAEXT C where C.IDDATA = A.IDDATA and C.MNFIELD = 921 and C.MSFIELD = '$c' and C.SORT = 'Списано')";
+            DataTable table = ExecuteQuery(query);
+            if (table.Rows.Count == 0) return;
+            string IDMAIN = table.Rows[0]["IDMAIN"].ToString();
 
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
@@ -1069,24 +1066,21 @@ namespace ExportBJ_XML
 
             writer.WriteStartObject();
 
-            ds.Tables.Add("exemplar");
+            DataTable exemplar;
             int cnt = 1;
             //ser.Serialize(
-            foreach (DataRow iddata in ds.Tables["t"].Rows)
+            foreach (DataRow iddata in table.Rows)
             {
-                da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A" +
-                                                " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                                                " where A.IDDATA = " + iddata["IDDATA"];// + 
-                ds.Tables["exemplar"].Rows.Clear();
-                ds.Tables["exemplar"].Clear();
-                i = da.Fill(ds, "exemplar");
-
+                query = " select * from " + fund + "..DATAEXT A" +
+                        " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                        " where A.IDDATA = " + iddata["IDDATA"];
+                exemplar = ExecuteQuery(query);
                 writer.WritePropertyName(cnt++.ToString());
                 writer.WriteStartObject();
 
 
 
-                foreach (DataRow r in ds.Tables["exemplar"].Rows)
+                foreach (DataRow r in exemplar.Rows)
                 {
                     string code = r["MNFIELD"].ToString() + r["MSFIELD"].ToString();
                     switch (code)
@@ -1277,12 +1271,11 @@ namespace ExportBJ_XML
             }
 
             //смотрим есть ли гиперссылка
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A" +
+            query = " select * from " + fund + "..DATAEXT A" +
                     " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                   " where A.MNFIELD = 940 and A.MSFIELD = '$a' and A.IDMAIN = " + IDMAIN;
-            ds = new DataSet();
-            i = da.Fill(ds, "t");
-            if (i != 0)//если есть - вставляем отдельным экземпляром.
+                    " where A.MNFIELD = 940 and A.MSFIELD = '$a' and A.IDMAIN = " + IDMAIN;
+            table = ExecuteQuery(query);
+            if (table.Rows.Count != 0)//если есть - вставляем отдельным экземпляром.
             {
                 writer.WritePropertyName(cnt++.ToString());
                 writer.WriteStartObject();
@@ -1296,31 +1289,30 @@ namespace ExportBJ_XML
                 writer.WriteValue(ds.Tables["t"].Rows[0]["PLAIN"].ToString());
                 if (fund == "BJVVV")
                 {
-                    da.SelectCommand.CommandText = " select * from BookAddInf..ScanInfo A" +
+                    query = " select * from BookAddInf..ScanInfo A" +
                     " where A.IDBase = 1 and A.IDBook = " + IDMAIN;
                 }
                 if (fund == "REDKOSTJ")
                 {
-                    da.SelectCommand.CommandText = " select * from BookAddInf..ScanInfo A" +
+                    query = " select * from BookAddInf..ScanInfo A" +
                     " where A.IDBase = 2 and A.IDBook = " + IDMAIN;
                 }
-                ds = new DataSet();
-                i = da.Fill(ds, "t");
-                if (i != 0)
+                DataTable hyperLinkTable = ExecuteQuery(query);
+                if (hyperLinkTable.Rows.Count != 0)
                 {
                     //Exemplar += "Авторское право: " + ((ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть");
                     writer.WritePropertyName("exemplar_copyright");
-                    writer.WriteValue(((ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть"));
+                    writer.WriteValue(((hyperLinkTable.Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть"));
                     //Exemplar += "Ветхий оригинал: " + ((ds.Tables["t"].Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет");
                     writer.WritePropertyName("exemplar_old_original");
-                    writer.WriteValue(((ds.Tables["t"].Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет"));
+                    writer.WriteValue(((hyperLinkTable.Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет"));
                     //Exemplar += "Наличие PDF версии: " + ((ds.Tables["t"].Rows[0]["PDF"].ToString() == "1") ? "да" : "нет");
                     writer.WritePropertyName("exemplar_PDF_exists");
-                    writer.WriteValue(((ds.Tables["t"].Rows[0]["PDF"].ToString() == "1") ? "да" : "нет"));
+                    writer.WriteValue(((hyperLinkTable.Rows[0]["PDF"].ToString() == "1") ? "да" : "нет"));
                     //Exemplar += "Доступ: Заказать через личный кабинет";
                     writer.WritePropertyName("exemplar_access");
                     writer.WriteValue(
-                        (ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ?
+                        (hyperLinkTable.Rows[0]["ForAllReader"].ToString() == "1") ?
                         "Для прочтения онлайн необходимо перейти по ссылке" :
                         "Для прочтения онлайн необходимо положить в корзину и заказать через личный кабинет");
                     writer.WritePropertyName("exemplar_carrier");
@@ -1334,47 +1326,37 @@ namespace ExportBJ_XML
             writer.Flush();
             writer.Close();
 
-
             AddField( "Exemplar", sb.ToString());
-
-
         }
 
-        private void AddHierarchyFields(string ParentPIN, XmlDocument _exportDocument, string fund, XmlNode _doc, string CurrentPIN)
+        private void AddHierarchyFields(string ParentPIN, string fund, string CurrentPIN)
         {
-            SqlDataAdapter da = new SqlDataAdapter();
-            da.SelectCommand = new SqlCommand();
-            da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT " +
+            string query = " select * from " + fund + "..DATAEXT " +
                                " where IDMAIN = " + ParentPIN;
-            DataSet ds = new DataSet();
-            int i = da.Fill(ds, "t");
-
+            DataTable table = ExecuteQuery(query);
             string TopHierarchyId = GetTopId(ParentPIN, fund);
-
             AddField( "hierarchy_top_id", fund + "_" + TopHierarchyId);
 
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A " +
-                               " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                               " where A.IDMAIN = " + TopHierarchyId + " and MNFIELD = 200 and MSFIELD = '$a' ";
-            ds = new DataSet();
-            i = da.Fill(ds, "t");
-            if (i != 0)
+            query = " select * from " + fund + "..DATAEXT A " +
+                    " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                    " where A.IDMAIN = " + TopHierarchyId + " and MNFIELD = 200 and MSFIELD = '$a' ";
+            table = ExecuteQuery(query);
+            if (table.Rows.Count != 0)
             {
-                string hierarchy_top_title = ds.Tables["t"].Rows[0]["PLAIN"].ToString();
+                string hierarchy_top_title = table.Rows[0]["PLAIN"].ToString();
                 AddField( "hierarchy_top_title", hierarchy_top_title);
             }
-
             AddField( "hierarchy_parent_id", fund + "_" + ParentPIN);
 
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A " +
-                   " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                   " where A.IDMAIN = " + ParentPIN + " and MNFIELD = 200 and MSFIELD = '$a' ";
-            ds = new DataSet();
-            i = da.Fill(ds, "t");
-            string hierarchy_parent_title = ds.Tables["t"].Rows[0]["PLAIN"].ToString();
-            AddField( "hierarchy_parent_title", hierarchy_parent_title);
+            query = " select * from " + fund + "..DATAEXT A " +
+                    " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                    " where A.IDMAIN = " + ParentPIN + " and MNFIELD = 200 and MSFIELD = '$a' ";
+            table = ExecuteQuery(query);
+            if (table.Rows.Count != 0)
+            {
+                string hierarchy_parent_title = table.Rows[0]["PLAIN"].ToString();
+                AddField("hierarchy_parent_title", hierarchy_parent_title);
+            }
 
             bool metka = false;
             foreach (XmlNode n in _doc.ChildNodes)
@@ -1384,58 +1366,51 @@ namespace ExportBJ_XML
                     metka = true;
                 }
             }
-            if (!metka) AddField( "is_hierarchy_id", fund + "_" + CurrentPIN);
-
-
-
-
-
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT A " +
-                   " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                   " where A.IDMAIN = " + CurrentPIN + " and MNFIELD = 200 and MSFIELD = '$a' ";
-            ds = new DataSet();
-            i = da.Fill(ds, "t");
-
-            string is_hierarchy_title = ds.Tables["t"].Rows[0]["PLAIN"].ToString();
-
-            metka = false;
-            foreach (XmlNode n in _doc.ChildNodes)
+            if (!metka)
             {
-                if (n.Attributes["name"].Value == "is_hierarchy_id")
-                {
-                    metka = true;
-                }
+                AddField("is_hierarchy_id", fund + "_" + CurrentPIN);//пометка о том, что это серия
             }
-            if (!metka) AddField( "is_hierarchy_title", is_hierarchy_title);
 
+
+            query = " select * from " + fund + "..DATAEXT A " +
+                    " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                    " where A.IDMAIN = " + CurrentPIN + " and MNFIELD = 200 and MSFIELD = '$a' ";
+            table = ExecuteQuery(query);
+            if (table.Rows.Count != 0)
+            {
+                string is_hierarchy_title = table.Rows[0]["PLAIN"].ToString();
+
+                metka = false;
+                foreach (XmlNode n in _doc.ChildNodes)
+                {
+                    if (n.Attributes["name"].Value == "is_hierarchy_id")
+                    {
+                        metka = true;
+                    }
+                }
+                if (!metka) AddField("is_hierarchy_title", is_hierarchy_title);
+            }
         }
 
         private string GetTopId(string ParentPIN, string fund)
         {
-            SqlDataAdapter da = new SqlDataAdapter();
-            da.SelectCommand = new SqlCommand();
-            da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
-            da.SelectCommand.CommandText = " select * from " + fund + "..DATAEXT " +
-                               " where MNFIELD = 225 and MSFIELD = '$a' and IDMAIN = " + ParentPIN;
-            DataSet ds = new DataSet();
-            int i = da.Fill(ds, "t");
-            if (i == 0) return ParentPIN;
-            ParentPIN = ds.Tables["t"].Rows[0]["SORT"].ToString();
+            string query = " select * from " + fund + "..DATAEXT " +
+                           " where MNFIELD = 225 and MSFIELD = '$a' and IDMAIN = " + ParentPIN;
+            DataTable table = ExecuteQuery(query);
+            if (table.Rows.Count == 0)
+            {
+                return ParentPIN;
+            }
+            ParentPIN = table.Rows[0]["SORT"].ToString();
             return GetTopId(ParentPIN, fund);
         }
 
 
         private int GetMaxIDMAIN(string p)
         {
-            SqlDataAdapter da = new SqlDataAdapter();
-            da.SelectCommand = new SqlCommand();
-            da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
-            da.SelectCommand.CommandText = "select max(ID) from " + p + "..MAIN";
-            DataSet ds = new DataSet();
-            da.Fill(ds, "t");
-            return int.Parse(ds.Tables["t"].Rows[0][0].ToString());
+            string query = "select max(ID) from " + p + "..MAIN";
+            DataTable table = ExecuteQuery(query);
+            return int.Parse(table.Rows[0][0].ToString());
         }
         public void AddField(string name, string val)
         {
