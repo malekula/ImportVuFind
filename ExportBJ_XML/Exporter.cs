@@ -42,6 +42,7 @@ namespace ExportBJ_XML
                 _lastID = i; 
                 string query = GetQuery(fund, i);
                 DataTable record = ExecuteQuery(query);
+                if (record.Rows.Count == 0) continue;
                 try
                 {
                     int check = CreateBJDoc(fund, record);
@@ -385,7 +386,7 @@ namespace ExportBJ_XML
                 AddField("publishDate", token["catalog"]["options"]["Publishing date"].ToString().Split('.')[2]);
                 AddField("isbn", token["catalog"]["options"]["ISBN"].ToString());
                 AddField("Volume", token["catalog"]["options"]["Number of pages"].ToString());
-                AddField("description", token["catalog"]["options"]["Desk"].ToString() + " ; " +
+                AddField("Annotation", token["catalog"]["options"]["Desk"].ToString() + " ; " +
                                               token["catalog"]["description"]["default"].ToString());
                 AddField("genre", token["catalog"]["options"]["Subject"].ToString());
                 AddField("topic", token["catalog"]["options"]["Catalogue section"].ToString());
@@ -410,12 +411,15 @@ namespace ExportBJ_XML
                 writer.WriteValue("http://не сформирован");
                 writer.WritePropertyName("exemplar_copyright");
                 writer.WriteValue("Да");
+                writer.WritePropertyName("exemplar_id");
+                writer.WriteValue("ebook");
 
                 writer.WriteEndObject();
                 writer.WriteEndObject();
 
 
                 AddField("MethodOfAccess", "Удалённый доступ");
+                AddField("Location", "internet");
                 AddField("Exemplar", sb.ToString());
                 AddField("id", "Pearson_" + token["id"].ToString());
                 AddField("HyperLink", "http://не сформирован");
@@ -505,30 +509,97 @@ namespace ExportBJ_XML
 
             var books = xdoc.Descendants("updated-book");
             int cnt = 1;
-            string work = "";
+            string current = "";
+            StringBuilder work = new StringBuilder();
             foreach (XElement elt in books)
             {
+                current = elt.Attribute("id").Value;
                 AddField("title", elt.Element("title-info").Element("book-title").Value);
 
-                AddField("HyperLink", elt.Element("document-info").Element("src-url").Value);
-
-
-                if (elt.Element("title-info").Element("author").Element("last-name") != null)
+                if (elt.Element("document-info").Element("src-url") != null)
                 {
-                    work += elt.Element("title-info").Element("author").Element("last-name") + " ";
-                }
-                if (elt.Element("title-info").Element("author").Element("first-name") != null)
-                {
-                    work += elt.Element("title-info").Element("author").Element("first-name") + " ";
-                }
-                if (elt.Element("title-info").Element("author").Element("middle-name") != null)
-                {
-                    work += elt.Element("title-info").Element("author").Element("middle-name");
+                    AddField("HyperLink", elt.Element("document-info").Element("src-url").Value);
                 }
 
-                AddField("author", work);
+                if (elt.Element("title-info").Element("author") != null)
+                {
+                    if (elt.Element("title-info").Element("author").Element("last-name") != null)
+                    {
+                        work.Append(elt.Element("title-info").Element("author").Element("last-name").Value).Append(" ");
+                    }
+                    if (elt.Element("title-info").Element("author").Element("first-name") != null)
+                    {
+                        work.Append(elt.Element("title-info").Element("author").Element("first-name").Value).Append(" ");
+                    }
+                    if (elt.Element("title-info").Element("author").Element("middle-name") != null)
+                    {
+                        work.Append(elt.Element("title-info").Element("author").Element("middle-name").Value);
+                    }
+                }
+                AddField("author", work.ToString());
+                work.Length = 0;
+
+                if (elt.Element("title-info").Element("annotation") != null)
+                {
+                    work.Append(elt.Element("title-info").Element("annotation").Value);
+                }
+                AddField("Annotation", work.ToString());
+                work.Length = 0;
                 
-                
+                if (elt.Element("publish-info") != null)
+                {
+                    if (elt.Element("publish-info").Element("year") != null)
+                    {
+                        work.Append(elt.Element("publish-info").Element("year").Value);
+                    }
+                }
+                AddField("publishDate", work.ToString());
+                work.Length = 0;
+
+                if (elt.Element("publish-info") != null)
+                {
+                    if (elt.Element("publish-info").Element("city") != null)
+                    {
+                        work.Append(elt.Element("publish-info").Element("city").Value);
+                    }
+                }
+                AddField("PlaceOfPublication", work.ToString());
+                work.Length = 0;
+
+                if (elt.Element("publish-info") != null)
+                {
+                    if (elt.Element("publish-info").Element("publisher") != null)
+                    {
+                        work.Append(elt.Element("publish-info").Element("publisher").Value);
+                    }
+                }
+                AddField("publisher", work.ToString());
+                work.Length = 0;
+
+                if (elt.Element("publish-info") != null)
+                {
+                    if (elt.Element("publish-info").Element("isbn") != null)
+                    {
+                        work.Append(elt.Element("publish-info").Element("isbn").Value);
+                    }
+                }
+                AddField("isbn", work.ToString());
+                work.Length = 0;
+
+                if (elt.Element("title-info").Element("lang") != null)
+                {
+                    work.Append(GetLitresLanguageRus(elt.Element("title-info").Element("lang").Value));
+                }
+                AddField("language", work.ToString());
+                work.Length = 0;
+
+                if (elt.Element("genres").Element("genre") != null)
+                {
+                    work.Append(elt.Element("genres").Element("genre").Attribute("title").Value);
+                }
+                AddField("genre", work.ToString());
+                work.Length = 0;
+
                 //описание экземпляра Litres
                 StringBuilder sb = new StringBuilder();
                 StringWriter strwriter = new StringWriter(sb);
@@ -542,16 +613,22 @@ namespace ExportBJ_XML
                 writer.WriteValue("Электронная книга");
                 writer.WritePropertyName("exemplar_access");
                 writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
-                writer.WritePropertyName("exemplar_hyperlink");
-                writer.WriteValue(elt.Element("document-info").Element("src-url").Value);
+                if (elt.Element("document-info").Element("src-url") != null)
+                {
+                    writer.WritePropertyName("exemplar_hyperlink");
+                    writer.WriteValue(elt.Element("document-info").Element("src-url").Value);
+                }
                 writer.WritePropertyName("exemplar_copyright");
                 writer.WriteValue("Да");
+                writer.WritePropertyName("exemplar_id");
+                writer.WriteValue("ebook");//вообще это iddata, но тут любой можно,поскольку всегда свободно
 
                 writer.WriteEndObject();
                 writer.WriteEndObject();
 
 
                 AddField("MethodOfAccess", "Удалённый доступ");
+                AddField("Location", "internet");
                 AddField("Exemplar", sb.ToString());
                 AddField("id", "Litres_" + elt.Attribute("id").Value);
                 AddField("fund", "Литрес");
@@ -580,7 +657,7 @@ namespace ExportBJ_XML
 
         private string GetQuery(string baza, int count)
         {
-            return "select A.*,cast(A.MNFIELD as nvarchar(10))+A.MSFIELD code,A.SORT,B.PLAIN, " +
+            return "select A.*,cast(A.MNFIELD as nvarchar(10))+A.MSFIELD code,A.SORT,B.PLAIN, C.IDLEVEL level_id, " +
                     " case when C.IDLEVEL = 1 then 'Монография'  " +
                     "  when C.IDLEVEL = -100 then 'Коллекция'  " +
                     "  when C.IDLEVEL = -2 then 'Сводный уровень многотомного издания'  " +
@@ -619,6 +696,7 @@ namespace ExportBJ_XML
                 }
                 catch (SqlException ex)
                 {
+                    if (ex.Number != -2) throw;
                     _f1.textBox1.Text += DateTime.Now.ToShortTimeString() + " - " + ex.Message + " ;\r\n ";
                     Application.DoEvents();
                     Thread.Sleep(5000);
@@ -632,12 +710,16 @@ namespace ExportBJ_XML
         {
             string currentIDMAIN = BJBook.Rows[0]["IDMAIN"].ToString();
             string level = BJBook.Rows[0]["Level"].ToString();
+            string level_id = BJBook.Rows[0]["level_id"].ToString();
+            int lev_id = int.Parse(level_id);
+            if (lev_id < 0) return 1;
             string allFields = "";
             string AF_all = "";
             bool wasTitle = false;//встречается ошибка: два заглавия в одном пине
             string description = "";//все 3хх поля
             DataTable clarify;
             string query = "";
+            string Annotation = "";
             foreach (DataRow r in BJBook.Rows)
             {
 
@@ -922,11 +1004,13 @@ namespace ExportBJ_XML
                     case "316$a":
                     case "320$a":
                     case "326$a":
-                    case "327$a":
                     case "336$a":
                     case "337$a":
-                    case "330$a":
                         description += r["PLAIN"].ToString() + " ; ";
+                        break;
+                    case "327$a":
+                    case "330$a":
+                        Annotation += r["PLAIN"].ToString() + " ; ";
                         break;
                     case "830$a":
                         AddField( "CatalogerNote", r["PLAIN"].ToString());
@@ -992,7 +1076,9 @@ namespace ExportBJ_XML
 
             AddField( "fund", rusFund);
             AddField( "allfields", allFields);
-            AddField( "Level", level);
+            AddField("Level", level);
+            AddField("Level_id", level_id);
+            AddField("Annotation", Annotation);
 
             if (description != "")
             {
@@ -1001,9 +1087,6 @@ namespace ExportBJ_XML
 
             AddExemplarFields(currentIDMAIN, _exportDocument, fund);
 
-            description = "";
-
-            allFields = "";
             return 0;
         }
 
@@ -1088,6 +1171,7 @@ namespace ExportBJ_XML
                         case "899$a":
                             writer.WritePropertyName("exemplar_location");
                             writer.WriteValue(r["PLAIN"].ToString());
+                            AddField("Location", r["PLAIN"].ToString());
                             break;
                         case "482$a":
                             //Exemplar += "Приплетено к:" + r["PLAIN"].ToString() + "#";
@@ -1286,7 +1370,7 @@ namespace ExportBJ_XML
                 writer.WriteValue("да");
                 //Exemplar += "Гиперссылка: " + ds.Tables["t"].Rows[0]["PLAIN"].ToString() + " #";
                 writer.WritePropertyName("exemplar_hyperlink");
-                writer.WriteValue(ds.Tables["t"].Rows[0]["PLAIN"].ToString());
+                writer.WriteValue(table.Rows[0]["PLAIN"].ToString());
                 if (fund == "BJVVV")
                 {
                     query = " select * from BookAddInf..ScanInfo A" +
@@ -1473,123 +1557,243 @@ namespace ExportBJ_XML
         }
         public string GetLitresLanguageRus(string lng)
         {
-            return "Русский";
-//            o	ru – Русский;
-//o	uk – Украинский;
-//o	en – Английский;
-//o	de – Немецкий;
-//o	fr – Французский;
-//o	ab – Абхазский;
-//o	az – Азербайджанский;
-//o	ay – Аймара;
-//o	sq – Албанский;
-//o	ar – Арабский;
-//o	hy – Армянский;
-//o	as – Ассамский;
-//o	af – Африкаанс;
-//o	ts – Банту;
-//o	eu – Баскский;
-//o	ba – Башкирский;
-//o	be – Белорусский;
-//o	bn – Бенгальский;
-//o	my – Бирманский;
-//o	bh – Бихарский;
-//o	bg – Болгарский;
-//o	br – Бретонский;
-//o	cy – Валлийский;
-//o	hu – Венгерский;
-//o	wo – Волоф;
-//o	vi – Вьетнамский;
-//o	gd – Гаэльский;
-//o	nl – Голландский;
-//o	el – Греческий;
-//o	ka – Грузинский;
-//o	gn – Гуарани;
-//o	da – Датский;
-//o	gr – Древнегреческий;
-//o	iw – Древнееврейский;
-//o	dr – Древнерусский;
-//o	zu – Зулу;
-//o	he – Иврит;
-//o	yi – Идиш;
-//o	in – Индонезийский;
-//o	ia – Интерлингва;
-//o	ga – Ирландский;
-//o	is – Исландский;
-//o	es – Испанский;
-//o	it – Итальянский;
-//o	kk – Казахский;
-//o	kn – Каннада;
-//o	ca – Каталанский;
-//o	ks – Кашмири;
-//o	qu – Кечуа;
-//o	ky – Киргизский;
-//o	zh – Китайский;
-//o	ko – Корейский;
-//o	kw – Корнский;
-//o	co – Корсиканский;
-//o	ku – Курдский;
-//o	km – Кхмерский;
-//o	xh – Кхоса;
-//o	la – Латинский;
-//o	lv – Латышский;
-//o	lt – Литовский;
-//o	mk – Македонский;
-//o	mg – Малагасийский;
-//o	ms – Малайский;
-//o	mt – Мальтийский;
-//o	mi – Маори;
-//o	mr – Маратхи;
-//o	mo – Молдавский;
-//o	mn – Монгольский;
-//o	na – Науру;
-//o	ne – Непали;
-//o	no – Норвежский;
-//o	pa – Панджаби;
-//o	fa – Персидский;
-//o	pl – Польский;
-//o	pt – Португальский;
-//o	ps – Пушту;
-//o	rm – Ретороманский;
-//o	ro – Румынский;
-//o	rn – Рунди;
-//o	sm – Самоанский;
-//o	sa – Санскрит;
-//o	sr – Сербский;
-//o	si – Сингальский;
-//o	sd – Синдхи;
-//o	sk – Словацкий;
-//o	sl – Словенский;
-//o	so – Сомали;
-//o	st – Сото;
-//o	sw – Суахили;
-//o	su – Сунданский;
-//o	tl – Тагальский;
-//o	tg – Таджикский;
-//o	th – Тайский;
-//o	ta – Тамильский;
-//o	tt – Татарский;
-//o	te – Телугу;
-//o	bo – Тибетский;
-//o	tr – Турецкий;
-//o	tk – Туркменский;
-//o	uz – Узбекский;
-//o	ug – Уйгурский;
-//o	ur – Урду;
-//o	fo – Фарерский;
-//o	fj – Фиджи;
-//o	fi – Финский;
-//o	fy – Фризский;
-//o	ha – Хауса;
-//o	hi – Хинди;
-//o	hr – Хорватскосербский;
-//o	cs – Чешский;
-//o	sv – Шведский;
-//o	sn – Шона;
-//o	eo – Эсперанто;
-//o	et – Эстонский;
-//o	jv – Яванский;
-//o	ja – Японский.
+            switch (lng)
+            {
+                case "uk":
+                    return "Украинский";
+                case "ru":
+                    return "Русский";
+                case "en":
+                    return "Английский";
+                case "de":
+                    return "Немецкий";
+                case "fr":
+                    return "Французский";
+                case "ab":
+                    return "Абхазский";
+                case "az":
+                    return "Азербайджанский";
+                case "ay":
+                    return "Аймара";
+                case "sq":
+                    return "Албанский";
+                case "ar":
+                    return "Арабский";
+                case "hy":
+                    return "Армянский";
+                case "as":
+                    return "Ассамский";
+                case "af":
+                    return "Африкаанс";
+                case "ts":
+                    return "Банту";
+                case "eu":
+                    return "Баскский";
+                case "ba":
+                    return "Башкирский";
+                case "be":
+                    return "Белорусский";
+                case "bn":
+                    return "Бенгальский";
+                case "my":
+                    return "Бирманский";
+                case "bh":
+                    return "Бихарский";
+                case "bg":
+                    return "Болгарский";
+                case "br":
+                    return "Бретонский";
+                case "cy":
+                    return "Валлийский";
+                case "hu":
+                    return "Венгерский";
+                case "wo":
+                    return "Волоф";
+                case "vi":
+                    return "Вьетнамский";
+                case "gd":
+                    return "Гаэльский";
+                case "nl":
+                    return "Голландский";
+                case "el":
+                    return "Греческий";
+                case "ka":
+                    return "Грузинский";
+                case "gn":
+                    return "Гуарани";
+                case "da":
+                    return "Датский";
+                case "gr":
+                    return "Древнегреческий";
+                case "iw":
+                    return "Древнееврейский";
+                case "dr":
+                    return "Древнерусский";
+                case "zu":
+                    return "Зулу";
+                case "he":
+                    return "Иврит";
+                case "yi":
+                    return "Идиш";
+                case "in":
+                    return "Индонезийский";
+                case "ia":
+                    return "Интерлингва";
+                case "ga":
+                    return "Ирландский";
+                case "is":
+                    return "Исландский";
+                case "es":
+                    return "Испанский";
+                case "it":
+                    return "Итальянский";
+                case "kk":
+                    return "Казахский";
+                case "kn":
+                    return "Каннада";
+                case "ca":
+                    return "Каталанский";
+                case "ks":
+                    return "Кашмири";
+                case "qu":
+                    return "Кечуа";
+                case "ky":
+                    return "Киргизский";
+                case "zh":
+                    return "Китайский";
+                case "ko":
+                    return "Корейский";
+                case "kw":
+                    return "Корнский";
+                case "co":
+                    return "Корсиканский";
+                case "ku":
+                    return "Курдский";
+                case "km":
+                    return "Кхмерский";
+                case "xh":
+                    return "Кхоса";
+                case "la":
+                    return "Латинский";
+                case "lv":
+                    return "Латышский";
+                case "lt":
+                    return "Литовский";
+                case "mk":
+                    return "Македонский";
+                case "mg":
+                    return "Малагасийский";
+                case "ms":
+                    return "Малайский";
+                case "mt":
+                    return "Мальтийский";
+                case "mi":
+                    return "Маори";
+                case "mr":
+                    return "Маратхи";
+                case "mo":
+                    return "Молдавский";
+                case "mn":
+                    return "Монгольский";
+                case "na":
+                    return "Науру";
+                case "ne":
+                    return "Непали";
+                case "no":
+                    return "Норвежский";
+                case "pa":
+                    return "Панджаби";
+                case "fa":
+                    return "Персидский";
+                case "pl":
+                    return "Польский";
+                case "pt":
+                    return "Португальский";
+                case "ps":
+                    return "Пушту";
+                case "rm":
+                    return "Ретороманский";
+                case "ro":
+                    return "Румынский";
+                case "rn":
+                    return "Рунди";
+                case "sm":
+                    return "Самоанский";
+                case "sa":
+                    return "Санскрит";
+                case "sr":
+                    return "Сербский";
+                case "si":
+                    return "Сингальский";
+                case "sd":
+                    return "Синдхи";
+                case "sk":
+                    return "Словацкий";
+                case "sl":
+                    return "Словенский";
+                case "so":
+                    return "Сомали";
+                case "st":
+                    return "Сото";
+                case "sw":
+                    return "Суахили";
+                case "su":
+                    return "Сунданский";
+                case "tl":
+                    return "Тагальский";
+                case "tg":
+                    return "Таджикский";
+                case "th":
+                    return "Тайский";
+                case "ta":
+                    return "Тамильский";
+                case "tt":
+                    return "Татарский";
+                case "te":
+                    return "Телугу";
+                case "bo":
+                    return "Тибетский";
+                case "tr":
+                    return "Турецкий";
+                case "tk":
+                    return "Туркменский";
+                case "uz":
+                    return "Узбекский";
+                case "ug":
+                    return "Уйгурский";
+                case "ur":
+                    return "Урду";
+                case "fo":
+                    return "Фарерский";
+                case "fj":
+                    return "Фиджи";
+                case "fi":
+                    return "Финский";
+                case "fy":
+                    return "Фризский";
+                case "ha":
+                    return "Хауса";
+                case "hi":
+                    return "Хинди";
+                case "hr":
+                    return "Хорватскосербский";
+                case "cs":
+                    return "Чешский";
+                case "sv":
+                    return "Шведский";
+                case "sn":
+                    return "Шона";
+                case "eo":
+                    return "Эсперанто";
+                case "et":
+                    return "Эстонский";
+                case "jv":
+                    return "Яванский";
+                case "ja":
+                    return "Японский";
+                default:
+                    return "Русский";
+            }
 
         }
 
