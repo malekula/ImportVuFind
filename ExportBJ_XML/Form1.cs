@@ -212,15 +212,17 @@ namespace ExportBJ_XML
         {
             StartTimer();
             Exporter exr = new Exporter(this);
-            exr.BJVVV();
+            
             exr.REDKOSTJ();
             exr.BRIT_SOVET();
             exr.BJACC();
             exr.BJFCC();
             exr.BJSCC();
-            exr.PERIOD();
-            exr.Pearson();
             exr.Litres();
+            //exr.PERIOD();
+            //exr.Pearson();
+            exr.BJVVV();
+
             StopTimer();
 
         }
@@ -279,6 +281,15 @@ namespace ExportBJ_XML
             Exporter exr = new Exporter(this);
             exr.Litres();
             StopTimer();
+        }
+
+        private void bjvvvCovers_Click(object sender, EventArgs e)
+        {
+            StartTimer();
+            Exporter exr = new Exporter(this);
+            exr.BJVVV_Covers();
+            StopTimer();
+
         }
     }
 }

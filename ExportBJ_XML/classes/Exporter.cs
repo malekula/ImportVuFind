@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using System.Xml.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using System.Drawing;
 
 namespace ExportBJ_XML
 {
@@ -377,7 +378,6 @@ namespace ExportBJ_XML
             int cnt = 1;
             foreach (JToken token in desPearson)
             {
-                //AddField( "id", token["id"].ToString());
                 AddField("title", token["catalog"]["title"]["default"].ToString());
                 AddField("title_short", token["catalog"]["title"]["default"].ToString());
                 AddField("author", token["catalog"]["options"]["Authors"].ToString());
@@ -389,7 +389,9 @@ namespace ExportBJ_XML
                 AddField("Annotation", token["catalog"]["options"]["Desk"].ToString() + " ; " +
                                               token["catalog"]["description"]["default"].ToString());
                 AddField("genre", token["catalog"]["options"]["Subject"].ToString());
+                AddField("genre_facet", token["catalog"]["options"]["Subject"].ToString());
                 AddField("topic", token["catalog"]["options"]["Catalogue section"].ToString());
+                AddField("topic_facet", token["catalog"]["options"]["Catalogue section"].ToString());
                 AddField("collection", token["catalog"]["options"]["Collection"].ToString());
                 AddField("language", token["catalog"]["options"]["Language"].ToString());
 
@@ -408,7 +410,7 @@ namespace ExportBJ_XML
                 writer.WritePropertyName("exemplar_access");
                 writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
                 writer.WritePropertyName("exemplar_hyperlink");
-                writer.WriteValue("http://не сформирован");
+                writer.WriteValue("https://ebooks.libfl.ru/product/" + token["id"].ToString());
                 writer.WritePropertyName("exemplar_copyright");
                 writer.WriteValue("Да");
                 writer.WritePropertyName("exemplar_id");
@@ -507,6 +509,15 @@ namespace ExportBJ_XML
             XDocument xdoc = XDocument.Load(@"f:\litres_source.xml");
 
 
+            var removedBooks = xdoc.Descendants("removed-book");
+            List<string> removedBookIDs = new List<string>();
+            foreach (XElement elt in removedBooks)
+            {
+                removedBookIDs.Add(elt.Attribute("id").Value);
+            }
+
+
+
             var books = xdoc.Descendants("updated-book");
             int cnt = 1;
             string current = "";
@@ -514,34 +525,60 @@ namespace ExportBJ_XML
             foreach (XElement elt in books)
             {
                 current = elt.Attribute("id").Value;
-                AddField("title", elt.Element("title-info").Element("book-title").Value);
-
-                if (elt.Element("document-info").Element("src-url") != null)
+                if (removedBookIDs.Contains(current))
                 {
-                    AddField("HyperLink", elt.Element("document-info").Element("src-url").Value);
+                    continue;
+                }
+                if (elt.Element("title-info") != null)
+                {
+                    if (elt.Element("title-info").Element("book-title") != null)
+                    {
+                        AddField("title", elt.Element("title-info").Element("book-title").Value);
+                        AddField("title_short", elt.Element("title-info").Element("book-title").Value);
+                    }
+                }
+                else
+                {
+                    AddField("title", "Заглавие не найдено");
+                    AddField("title_short", "Заглавие не найдено");
                 }
 
-                if (elt.Element("title-info").Element("author") != null)
+                //if (elt.Element("document-info").Element("src-url") != null)
+                //{
+                //    AddField("HyperLink", elt.Element("document-info").Element("src-url").Value);
+                //}
+                work.Length = 0;
+                work.Append(@"http://al.litres.ru/").Append(elt.Attribute("id").Value);
+                string hypLink = work.ToString();
+                AddField("HyperLink", hypLink);
+                work.Length = 0;
+                if (elt.Element("title-info") != null)
                 {
-                    if (elt.Element("title-info").Element("author").Element("last-name") != null)
+                    if (elt.Element("title-info").Element("author") != null)
                     {
-                        work.Append(elt.Element("title-info").Element("author").Element("last-name").Value).Append(" ");
-                    }
-                    if (elt.Element("title-info").Element("author").Element("first-name") != null)
-                    {
-                        work.Append(elt.Element("title-info").Element("author").Element("first-name").Value).Append(" ");
-                    }
-                    if (elt.Element("title-info").Element("author").Element("middle-name") != null)
-                    {
-                        work.Append(elt.Element("title-info").Element("author").Element("middle-name").Value);
+                        if (elt.Element("title-info").Element("author").Element("last-name") != null)
+                        {
+                            work.Append(elt.Element("title-info").Element("author").Element("last-name").Value).Append(" ");
+                        }
+                        if (elt.Element("title-info").Element("author").Element("first-name") != null)
+                        {
+                            work.Append(elt.Element("title-info").Element("author").Element("first-name").Value).Append(" ");
+                        }
+                        if (elt.Element("title-info").Element("author").Element("middle-name") != null)
+                        {
+                            work.Append(elt.Element("title-info").Element("author").Element("middle-name").Value);
+                        }
                     }
                 }
                 AddField("author", work.ToString());
                 work.Length = 0;
 
-                if (elt.Element("title-info").Element("annotation") != null)
+                if (elt.Element("title-info") != null)
                 {
-                    work.Append(elt.Element("title-info").Element("annotation").Value);
+                    if (elt.Element("title-info").Element("annotation") != null)
+                    {
+                        work.Append(elt.Element("title-info").Element("annotation").Value);
+                    }
                 }
                 AddField("Annotation", work.ToString());
                 work.Length = 0;
@@ -586,18 +623,24 @@ namespace ExportBJ_XML
                 AddField("isbn", work.ToString());
                 work.Length = 0;
 
-                if (elt.Element("title-info").Element("lang") != null)
+                if (elt.Element("title-info") != null)
                 {
-                    work.Append(GetLitresLanguageRus(elt.Element("title-info").Element("lang").Value));
+                    if (elt.Element("title-info").Element("lang") != null)
+                    {
+                        work.Append(GetLitresLanguageRus(elt.Element("title-info").Element("lang").Value));
+                    }
                 }
                 AddField("language", work.ToString());
                 work.Length = 0;
-
-                if (elt.Element("genres").Element("genre") != null)
+                if (elt.Element("genres") != null)
                 {
-                    work.Append(elt.Element("genres").Element("genre").Attribute("title").Value);
+                    if (elt.Element("genres").Element("genre") != null)
+                    {
+                        work.Append(elt.Element("genres").Element("genre").Attribute("title").Value);
+                    }
                 }
                 AddField("genre", work.ToString());
+                AddField("genre_facet", work.ToString());
                 work.Length = 0;
 
                 //описание экземпляра Litres
@@ -613,11 +656,9 @@ namespace ExportBJ_XML
                 writer.WriteValue("Электронная книга");
                 writer.WritePropertyName("exemplar_access");
                 writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
-                if (elt.Element("document-info").Element("src-url") != null)
-                {
-                    writer.WritePropertyName("exemplar_hyperlink");
-                    writer.WriteValue(elt.Element("document-info").Element("src-url").Value);
-                }
+                writer.WritePropertyName("exemplar_hyperlink");
+                writer.WriteValue( hypLink );
+
                 writer.WritePropertyName("exemplar_copyright");
                 writer.WriteValue("Да");
                 writer.WritePropertyName("exemplar_id");
@@ -641,7 +682,9 @@ namespace ExportBJ_XML
                 Application.DoEvents();
             }
 
-             
+            _objXmlWriter.Flush();
+            _objXmlWriter.Close();
+  
         }
         static string sha256(string randomString)
         {
@@ -757,7 +800,8 @@ namespace ExportBJ_XML
                         AddField( "format", r["PLAIN"].ToString());
                         break;
                     case "922$e":
-                        AddField( "genre", r["PLAIN"].ToString());
+                        AddField("genre", r["PLAIN"].ToString());
+                        AddField("genre_facet", r["PLAIN"].ToString());
                         break;
                     case "10$a":
                         query = " select * from " + fund + "..DATAEXT A " +
@@ -1039,7 +1083,8 @@ namespace ExportBJ_XML
                             TPR += rr["VALUE"].ToString() + "•";
                         }
                         TPR = TPR.Substring(0, TPR.Length - 1);
-                        AddField( "topic", TPR);
+                        AddField("topic", TPR);
+                        AddField("topic_facet", TPR);
                         break;
                     case "3000$a":
                         AddField( "OwnerPerson", r["PLAIN"].ToString());
@@ -1112,9 +1157,9 @@ namespace ExportBJ_XML
         private void AddExemplarFields(string idmain, XmlDocument _exportDocument, string fund)
         {
 
-            string query =  " select * from " + fund + "..DATAEXT A" +
+            string query =  " select distinct IDMAIN, IDDATA from " + fund + "..DATAEXT A" +
                             " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                            " where A.IDMAIN = " + idmain + " and A.MNFIELD = 899 and A.MSFIELD = '$p' " +
+                            " where A.IDMAIN = " + idmain + " and (A.MNFIELD = 899 and A.MSFIELD = '$p' or A.MNFIELD = 899 and A.MSFIELD = '$a' or A.MNFIELD = 899 and A.MSFIELD = '$w') " +
                             " and not exists (select 1 from BJVVV..DATAEXT C where C.IDDATA = A.IDDATA and C.MNFIELD = 921 and C.MSFIELD = '$c' and C.SORT = 'Списано')";
             DataTable table = ExecuteQuery(query);
             if (table.Rows.Count == 0) return;
@@ -1169,6 +1214,7 @@ namespace ExportBJ_XML
                     switch (code)
                     {
                         case "899$a":
+                            string UnifiedLocation = GetUnifiedLocation(r["PLAIN"].ToString());
                             writer.WritePropertyName("exemplar_location");
                             writer.WriteValue(r["PLAIN"].ToString());
                             AddField("Location", r["PLAIN"].ToString());
@@ -1402,6 +1448,9 @@ namespace ExportBJ_XML
                     writer.WritePropertyName("exemplar_carrier");
                     writer.WriteValue("Электронная книга");
 
+                    writer.WritePropertyName("exemplar_id");
+                    writer.WriteValue("ebook");//для всех у кого есть электронная копия. АПИ когда это значение встретит, сразу вернёт "доступно"
+
                 }
                 writer.WriteEndObject();
                 AddField( "MethodOfAccess", "Удалённый доступ");
@@ -1411,6 +1460,77 @@ namespace ExportBJ_XML
             writer.Close();
 
             AddField( "Exemplar", sb.ToString());
+        }
+
+        private string GetUnifiedLocation(string location)
+        {
+            string result = location;
+
+            switch (location)
+            {
+                case "ЦМС Академия Рудомино":
+                    result = "Академия \"Рудомино\"";
+                    break;
+                case "…Выст… КОО Группа справочного-информационного обслуживания":
+                    result = "Выставка книг 2 этаж";
+                    break;
+                case "…ЗалФ… Отдел детской книги и детских программ":
+                    result = "Детский зал 2 этаж";
+                    break;
+                case "ЦМС ОР Дом еврейской книги":
+                    result = "Дом еврейской книги 3 этаж";
+                    break;
+                case "…Зал… КОО Группа абонементного обслуживания":
+                    result = "Зал абонементного обслуживания 2 этаж";
+                    break;
+                case "…Зал… КОО Группа выдачи документов":
+                    result = "Зал выдачи документов 2 этаж";
+                    break;
+                case "…Зал… КНИО Группа искусствоведения":
+                    result = "Зал искусствоведения 4 этаж";
+                    break;
+                case "…Зал… КНИО Группа редкой книги":
+                    result = "Зал редкой книги 4 этаж";
+                    break;
+                case "…ЗалФ… КНИО Группа религоведения":
+                    result = "Зал религиоведения 4 этаж";
+                    break;
+                case "…Хран… Сектор книгохранения - 0 этаж":
+                    result = "Книгохранение";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+                case "aaaa":
+                    result = "aaaaa";
+                    break;
+            }
+
+            return result;
         }
 
         private void AddHierarchyFields(string ParentPIN, string fund, string CurrentPIN)
@@ -1797,5 +1917,42 @@ namespace ExportBJ_XML
 
         }
 
+
+        internal void BJVVV_Covers()
+        {
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("select IDMAIN from BJVVV..IMAGES");
+
+            DataTable table = ExecuteQuery(sb.ToString());
+            foreach (DataRow row in table.Rows)
+            {
+                sb.Length = 0;
+                sb.AppendFormat("select PIC from BJVVV..IMAGES where IDMAIN = {0}", row["IDMAIN"].ToString());
+                DataTable pics = ExecuteQuery(sb.ToString());
+                int i = 0;
+                //using (new NetworkConnection(_directoryPath, new NetworkCredential("BJStor01\\imgview", "Image_123Viewer")))
+                NetworkCredential theNetworkCredential = new NetworkCredential("BJStor01\\imgview", "Image_123Viewer");
+                CredentialCache theNetcache = new CredentialCache();
+                theNetcache.Add(@"\\192.168.4.30\VufindCovers", 0, "Basic", theNetworkCredential);
+                //then do whatever, such as getting a list of folders:
+                string[] theFolders = System.IO.Directory.GetDirectories(@"\\192.168.4.30\VufindCovers");
+
+                foreach (DataRow pic in pics.Rows)
+                {
+                    byte[] p = (byte[])pic["PIC"];
+                    MemoryStream ms = new MemoryStream(p);
+                    Image img = Image.FromStream(ms);
+                    string path = @"f:\import\covers\bjvvv\" + row["IDMAIN"].ToString() +@"\";
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    img.Save(path + i.ToString() + ".jpg");
+                }
+
+            }
+
+        }
     }
 }

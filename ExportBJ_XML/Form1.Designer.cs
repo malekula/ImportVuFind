@@ -47,6 +47,8 @@
             this.period = new System.Windows.Forms.Button();
             this.pearson = new System.Windows.Forms.Button();
             this.litres = new System.Windows.Forms.Button();
+            this.bjvvvCovers = new System.Windows.Forms.Button();
+            this.litresCovers = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // all
@@ -219,11 +221,32 @@
             this.litres.UseVisualStyleBackColor = true;
             this.litres.Click += new System.EventHandler(this.litres_Click);
             // 
+            // bjvvvCovers
+            // 
+            this.bjvvvCovers.Location = new System.Drawing.Point(569, 33);
+            this.bjvvvCovers.Name = "bjvvvCovers";
+            this.bjvvvCovers.Size = new System.Drawing.Size(75, 23);
+            this.bjvvvCovers.TabIndex = 11;
+            this.bjvvvCovers.Text = "bjvvvCovers";
+            this.bjvvvCovers.UseVisualStyleBackColor = true;
+            this.bjvvvCovers.Click += new System.EventHandler(this.bjvvvCovers_Click);
+            // 
+            // litresCovers
+            // 
+            this.litresCovers.Location = new System.Drawing.Point(569, 62);
+            this.litresCovers.Name = "litresCovers";
+            this.litresCovers.Size = new System.Drawing.Size(75, 23);
+            this.litresCovers.TabIndex = 11;
+            this.litresCovers.Text = "litresCovers";
+            this.litresCovers.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(566, 450);
+            this.ClientSize = new System.Drawing.Size(693, 450);
+            this.Controls.Add(this.litresCovers);
+            this.Controls.Add(this.bjvvvCovers);
             this.Controls.Add(this.litres);
             this.Controls.Add(this.pearson);
             this.Controls.Add(this.period);
@@ -268,6 +291,8 @@
         private System.Windows.Forms.Button period;
         private System.Windows.Forms.Button pearson;
         private System.Windows.Forms.Button litres;
+        private System.Windows.Forms.Button bjvvvCovers;
+        private System.Windows.Forms.Button litresCovers;
     }
 }
 
