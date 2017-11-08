@@ -14,6 +14,8 @@ using System.Xml.Linq;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ExportBJ_XML.classes;
+
 namespace ExportBJ_XML
 {
     public partial class Form1 : Form
@@ -192,9 +194,14 @@ namespace ExportBJ_XML
         }
         private void bjvvv_Click(object sender, EventArgs e)
         {
+            //StartTimer();
+            //Exporter exr = new Exporter(this);
+            //exr.BJVVV();
+            //StopTimer();
+
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.BJVVV();
+            classes.BJVuFindConverter cnv = new BJVuFindConverter("BJVVV");
+            cnv.Export();
             StopTimer();
 
 
@@ -203,25 +210,25 @@ namespace ExportBJ_XML
         private void redkostj_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.REDKOSTJ();
+            classes.BJVuFindConverter cnv = new BJVuFindConverter("REDKOSTJ");
+            cnv.Export();
             StopTimer();
         }
 
         private void all_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
+            //Exporter exr = new Exporter(this);
             
-            exr.REDKOSTJ();
-            exr.BRIT_SOVET();
-            exr.BJACC();
-            exr.BJFCC();
-            exr.BJSCC();
-            exr.Litres();
-            //exr.PERIOD();
-            //exr.Pearson();
-            exr.BJVVV();
+            //exr.REDKOSTJ();
+            //exr.BRIT_SOVET();
+            //exr.BJACC();
+            //exr.BJFCC();
+            //exr.BJSCC();
+            //exr.Litres();
+            ////exr.PERIOD();
+            ////exr.Pearson();
+            //exr.BJVVV();
 
             StopTimer();
 
@@ -230,56 +237,56 @@ namespace ExportBJ_XML
         private void brit_sovet_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.BRIT_SOVET();
+            classes.BJVuFindConverter cnv = new BJVuFindConverter("BRIT_SOVET");
+            cnv.Export();
             StopTimer();
         }
 
         private void bjacc_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.BJACC();
+            classes.BJVuFindConverter cnv = new BJVuFindConverter("BJACC");
+            cnv.Export();
             StopTimer();
         }
 
         private void bjfcc_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.BJFCC();
+            BJVuFindConverter cnv = new BJVuFindConverter("BJFCC");
+            cnv.Export();
             StopTimer();
         }
 
         private void bjscc_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.BJSCC();
+            BJVuFindConverter cnv = new BJVuFindConverter("BJSCC");
+            cnv.Export();
             StopTimer();
         }
 
         private void period_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.PERIOD();
+            PeriodVuFindConverter cnv = new PeriodVuFindConverter();
+            cnv.Export();
             StopTimer();
         }
 
         private void pearson_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.Pearson();
+            PearsonVuFindConverter cnv = new PearsonVuFindConverter();
+            cnv.Export();
             StopTimer();
         }
 
         private void litres_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.Litres();
+            LitresVuFindConverter cnv = new LitresVuFindConverter();
+            cnv.Export();
             StopTimer();
         }
 
@@ -289,6 +296,8 @@ namespace ExportBJ_XML
             Exporter exr = new Exporter(this);
             exr.BJVVV_Covers();
             StopTimer();
+
+            
 
         }
     }
