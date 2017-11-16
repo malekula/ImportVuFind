@@ -20,9 +20,39 @@ namespace ExportBJ_XML
 {
     public partial class Form1 : Form
     {
+        BJVuFindConverter bjvvv = new BJVuFindConverter("BJVVV");
+        BJVuFindConverter redkostj = new BJVuFindConverter("REDKOSTJ");
+        BJVuFindConverter bjacc = new BJVuFindConverter("BJACC");
+        BJVuFindConverter bjfcc = new BJVuFindConverter("BJFCC");
+        BJVuFindConverter bjscc = new BJVuFindConverter("BJSCC");
+        BJVuFindConverter brit_sovet = new BJVuFindConverter("BRIT_SOVET");
+        LitresVuFindConverter litres = new LitresVuFindConverter();
+        PeriodVuFindConverter period = new PeriodVuFindConverter();
+        PearsonVuFindConverter pearson = new PearsonVuFindConverter();
+
+
         public Form1()
         {
             InitializeComponent();
+            
+            bjvvv.RecordExported += new EventHandler(RecordExported);
+            bjacc.RecordExported += new EventHandler(RecordExported);
+            brit_sovet.RecordExported += new EventHandler(RecordExported);
+            bjfcc.RecordExported += new EventHandler(RecordExported);
+            bjscc.RecordExported += new EventHandler(RecordExported);
+            redkostj.RecordExported += new EventHandler(RecordExported);
+            litres.RecordExported += new EventHandler(RecordExported);
+            pearson.RecordExported += new EventHandler(RecordExported);
+            period.RecordExported += new EventHandler(RecordExported);
+            
+        }
+
+    
+
+        void RecordExported(object sender, EventArgs e)
+        {
+            label2.Text = ((VuFindConverterEventArgs)e).RecordId;
+            Application.DoEvents();
         }
         Stopwatch sw;
         private void button1_Click(object sender, EventArgs e)
@@ -200,8 +230,7 @@ namespace ExportBJ_XML
             //StopTimer();
 
             StartTimer();
-            classes.BJVuFindConverter cnv = new BJVuFindConverter("BJVVV");
-            cnv.Export();
+            bjvvv.Export();
             StopTimer();
 
 
@@ -210,25 +239,24 @@ namespace ExportBJ_XML
         private void redkostj_Click(object sender, EventArgs e)
         {
             StartTimer();
-            classes.BJVuFindConverter cnv = new BJVuFindConverter("REDKOSTJ");
-            cnv.Export();
+            redkostj.Export();
             StopTimer();
         }
 
         private void all_Click(object sender, EventArgs e)
         {
             StartTimer();
-            //Exporter exr = new Exporter(this);
-            
-            //exr.REDKOSTJ();
-            //exr.BRIT_SOVET();
-            //exr.BJACC();
-            //exr.BJFCC();
-            //exr.BJSCC();
-            //exr.Litres();
-            ////exr.PERIOD();
-            ////exr.Pearson();
-            //exr.BJVVV();
+
+            bjvvv.Export();
+            redkostj.Export();
+            bjacc.Export();
+            bjfcc.Export();
+            bjscc.Export();
+            brit_sovet.Export();
+            pearson.Export();
+            litres.GetLitresSourceData();
+            litres.Export();
+            period.Export();
 
             StopTimer();
 
@@ -237,68 +265,67 @@ namespace ExportBJ_XML
         private void brit_sovet_Click(object sender, EventArgs e)
         {
             StartTimer();
-            classes.BJVuFindConverter cnv = new BJVuFindConverter("BRIT_SOVET");
-            cnv.Export();
+            brit_sovet.Export();
             StopTimer();
         }
 
         private void bjacc_Click(object sender, EventArgs e)
         {
             StartTimer();
-            classes.BJVuFindConverter cnv = new BJVuFindConverter("BJACC");
-            cnv.Export();
+            bjacc.Export();
             StopTimer();
         }
 
         private void bjfcc_Click(object sender, EventArgs e)
         {
             StartTimer();
-            BJVuFindConverter cnv = new BJVuFindConverter("BJFCC");
-            cnv.Export();
+            bjfcc.Export();
             StopTimer();
         }
 
         private void bjscc_Click(object sender, EventArgs e)
         {
             StartTimer();
-            BJVuFindConverter cnv = new BJVuFindConverter("BJSCC");
-            cnv.Export();
+            bjscc.Export();
             StopTimer();
         }
 
         private void period_Click(object sender, EventArgs e)
         {
             StartTimer();
-            PeriodVuFindConverter cnv = new PeriodVuFindConverter();
-            cnv.Export();
+            period.Export();
             StopTimer();
         }
 
         private void pearson_Click(object sender, EventArgs e)
         {
             StartTimer();
-            PearsonVuFindConverter cnv = new PearsonVuFindConverter();
-            cnv.Export();
+            pearson.Export();
             StopTimer();
         }
 
         private void litres_Click(object sender, EventArgs e)
         {
             StartTimer();
-            LitresVuFindConverter cnv = new LitresVuFindConverter();
-            cnv.Export();
+            litres.Export();
             StopTimer();
         }
 
         private void bjvvvCovers_Click(object sender, EventArgs e)
         {
             StartTimer();
-            Exporter exr = new Exporter(this);
-            exr.BJVVV_Covers();
+            bjvvv.ExportCovers();
             StopTimer();
 
             
 
+        }
+
+        private void litresCovers_Click(object sender, EventArgs e)
+        {
+            StartTimer();
+            litres.ExportCovers();
+            StopTimer();
         }
     }
 }

@@ -53,6 +53,7 @@ namespace ExportBJ_XML.classes
                 {
                     AddField("title", val.Rows[0]["POLE"].ToString());
                     AddField("title_short", val.Rows[0]["POLE"].ToString());
+                    AddField("title_sort", val.Rows[0]["POLE"].ToString());
                 }
                 //вид издания
                 da.SelectCommand.CommandText = "select * from PERIOD..PI where IDF = 124 and VVERH = " + row["IDZ"].ToString();
@@ -124,9 +125,9 @@ namespace ExportBJ_XML.classes
                 _doc.WriteTo(_objXmlWriter);
                 _doc = _exportDocument.CreateElement("doc");
 
-                //OnRecordExported
-                //_f1.label2.Text = "period_" + row["POLE"];
-                //Application.DoEvents();
+                VuFindConverterEventArgs args = new VuFindConverterEventArgs();
+                args.RecordId = "period_" + row["POLE"];
+                OnRecordExported(args);
             }
             _objXmlWriter.Flush();
             _objXmlWriter.Close();

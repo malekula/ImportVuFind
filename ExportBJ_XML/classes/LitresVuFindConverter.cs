@@ -58,6 +58,7 @@ namespace ExportBJ_XML.classes
                     {
                         AddField("title", elt.Element("title-info").Element("book-title").Value);
                         AddField("title_short", elt.Element("title-info").Element("book-title").Value);
+                        AddField("title_sort", elt.Element("title-info").Element("book-title").Value);
                     }
                 }
                 else
@@ -94,6 +95,8 @@ namespace ExportBJ_XML.classes
                     }
                 }
                 AddField("author", work.ToString());
+                AddField("author_sort", work.ToString());
+
                 work.Length = 0;
 
                 if (elt.Element("title-info") != null)
@@ -203,8 +206,9 @@ namespace ExportBJ_XML.classes
                 _doc = _exportDocument.CreateElement("doc");
                 //OnRecordExported
                 cnt++;
-                //_f1.label2.Text = "Litres_" + cnt++;
-                //Application.DoEvents();
+                VuFindConverterEventArgs args = new VuFindConverterEventArgs();
+                args.RecordId = "Litres_" + elt.Attribute("id").Value;
+                OnRecordExported(args);
             }
 
             _objXmlWriter.Flush();
@@ -218,9 +222,103 @@ namespace ExportBJ_XML.classes
         }
         public override void ExportCovers()
         {
-            throw new NotImplementedException();
-        }
+            //XDocument xdoc = XDocument.Load(@"f:\api_litres.xml");
+            XDocument xdoc = XDocument.Load(@"f:\litres_source.xml");
 
+
+            var allBook = xdoc.Descendants("updated-book");
+            foreach (XElement elt in allBook)
+            {
+                Uri url = new Uri("http://partnersdnld.litres.ru/static/bookimages/00/01/23/00012345.bin.dir/00012345.cover.jpg");
+                string id = elt.Attribute("id").Value;
+                switch (id.Length)
+                {
+                    case 0:
+                        id = "00000000";
+                        break;
+                    case 1:
+                        id = "0000000"+id;
+                        break;
+                    case 2:
+                        id = "000000"+id;
+                        break;
+                    case 3:
+                        id = "00000"+id;
+                        break;
+                    case 4:
+                        id = "0000"+id;
+                        break;
+                    case 5:
+                        id = "000"+id;
+                        break;
+                    case 6:
+                        id = "00"+id;
+                        break;
+                    case 7:
+                        id = "0"+id;
+                        break;
+                }
+
+                StringBuilder sb = new StringBuilder("http://partnersdnld.litres.ru/static/bookimages/");
+                string coverType = (elt.Attribute("cover") == null) ? "jpg" : elt.Attribute("cover").Value;
+                sb.Append(id[0]).Append(id[1]).Append("/").Append(id[2]).Append(id[3]).Append("/").Append(id[4]).Append(id[5]).Append("/").Append(id).Append(".bin.dir/").Append(id).Append(".cover.").Append(coverType);
+                string coverUrl = sb.ToString();
+
+                string path = @"f:\import\covers\litres\" + elt.Attribute("id").Value +@"\";
+
+                StringBuilder fileName = new StringBuilder();
+                fileName.Append(path).Append("cover.").Append(coverType);
+                
+
+                DownloadRemoteImageFile(coverUrl, fileName.ToString(), path);
+
+                VuFindConverterEventArgs e = new VuFindConverterEventArgs();
+                e.RecordId = "litres_" + elt.Attribute("id").Value;
+                OnRecordExported(e);
+            }
+        }
+        private void DownloadRemoteImageFile(string uri, string fileName, string path)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+            HttpWebResponse response;
+            try
+            {
+                response = (HttpWebResponse)request.GetResponse();
+            }
+            catch
+            {
+                return;
+            }
+
+            // Check that the remote file was found. The ContentType
+            // check is performed since a request for a non-existent
+            // image file might be redirected to a 404-page, which would
+            // yield the StatusCode "OK", even though the image was not
+            // found.
+            if ((response.StatusCode == HttpStatusCode.OK ||
+                response.StatusCode == HttpStatusCode.Moved ||
+                response.StatusCode == HttpStatusCode.Redirect) &&
+                response.ContentType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                // if the remote file was found, download oit
+                using (Stream inputStream = response.GetResponseStream())
+                using (Stream outputStream = File.OpenWrite(fileName))
+                {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    do
+                    {
+                        bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+                        outputStream.Write(buffer, 0, bytesRead);
+                    } while (bytesRead != 0);
+                }
+            }
+        }
 
         public void GetLitresSourceData()
         {

@@ -14,31 +14,40 @@ namespace ExportBJ_XML.classes
         { 
             get 
             {
-                return this.Fund; 
+                return this._fund; 
             }
             protected set
             {
-                this.Fund = value;
+                this._fund = value;
             }
         }
-
+        private string _fund = "unknown";
         protected XmlWriter _objXmlWriter;
         protected XmlDocument _exportDocument;
         protected XmlNode _doc;
         protected XmlNode _root;
 
-        event EventHandler<VuFindConverterEventArgs> OnRecordExported;
-        public event EventHandler<VuFindConverterEventArgs> OnDatabaseTimeout;
-        event EventHandler<VuFindConverterEventArgs> OnConvertError;
+        public event EventHandler RecordExported;
+        //public event EventHandler<VuFindConverterEventArgs> OnDatabaseTimeout;
+        //event EventHandler<VuFindConverterEventArgs> OnConvertError;
 
         public VuFindConverter() 
         {
-            Fund = "unknown";
+            //Fund = "unknown";
         }
 
         public abstract void Export();
         public abstract void ExportSingleRecord(int idmain);
         public abstract void ExportCovers();
+
+        protected virtual void OnRecordExported(EventArgs e)
+        {
+            EventHandler handler = RecordExported;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
 
         public void AddField(string name, string val)
         {

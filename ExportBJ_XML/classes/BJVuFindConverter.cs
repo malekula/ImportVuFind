@@ -76,10 +76,9 @@ namespace ExportBJ_XML.classes
                 _doc.WriteTo(_objXmlWriter);
                 _doc = _exportDocument.CreateElement("doc");
 
-
-                //onrecordexported
-                //_f1.label2.Text = fund + "_" + i;
-                //Application.DoEvents();
+                VuFindConverterEventArgs args = new VuFindConverterEventArgs();
+                args.RecordId = this.Fund + "_" + i;
+                OnRecordExported(args);
             }
 
             _objXmlWriter.Flush();
@@ -124,6 +123,7 @@ namespace ExportBJ_XML.classes
             string allFields = "";
             string AF_all = "";
             bool wasTitle = false;//встречается ошибка: два заглавия в одном пине
+            bool wasAuthor = false;//был ли автор. если был, то сортировочное поле уже заполнено
             string description = "";//все 3хх поля
             DataTable clarify;
             string query = "";
@@ -139,11 +139,17 @@ namespace ExportBJ_XML.classes
                         if (wasTitle) break;
                         AddField("title", r["PLAIN"].ToString());
                         AddField("title_short", r["PLAIN"].ToString());
+                        AddField("title_sort", r["SORT"].ToString());
+
                         wasTitle = true;
                         break;
                     case "700$a":
                         AddField("author", r["PLAIN"].ToString());
-                        AddField("author_sort", r["SORT"].ToString());
+                        if (!wasAuthor)
+                        {
+                            AddField("author_sort", r["SORT"].ToString());
+                        }
+                        wasAuthor = true;
                         //забрать все варианты написания автора из авторитетного файла и вставить в скрытое, но поисковое поле
                         break;
                     case "701$a":
@@ -259,7 +265,11 @@ namespace ExportBJ_XML.classes
                         break;
                     case "700$3":
                         AF_all = GetAFAll( r["AFLINKID"].ToString(), "AFNAMESVAR");
-                        AddField("author_variant", AF_all);//хранить но не отображать
+                        string[] author_variants = AF_all.Split(';');
+                        foreach (string av in author_variants)
+                        {
+                            AddField("author_variant", av);//хранить но не отображать
+                        }
                         break;
                     case "701$3":
                         AF_all = GetAFAll( r["AFLINKID"].ToString(), "AFNAMESVAR");
@@ -445,9 +455,9 @@ namespace ExportBJ_XML.classes
                         string TPR = "";
                         foreach (DataRow rr in clarify.Rows)
                         {
-                            TPR += rr["VALUE"].ToString() + "•";
+                            TPR += rr["VALUE"].ToString() + " • ";
                         }
-                        TPR = TPR.Substring(0, TPR.Length - 1);
+                        TPR = TPR.Substring(0, TPR.Length - 2);
                         AddField("topic", TPR);
                         AddField("topic_facet", TPR);
                         break;
@@ -503,7 +513,7 @@ namespace ExportBJ_XML.classes
         private void AddExemplarFields(string idmain, XmlDocument _exportDocument, string fund)
         {
 
-            string query = " select distinct IDMAIN, IDDATA from " + fund + "..DATAEXT A" +
+            string query = " select distinct A.IDMAIN, A.IDDATA from " + fund + "..DATAEXT A" +
                             " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
                             " where A.IDMAIN = " + idmain + " and (A.MNFIELD = 899 and A.MSFIELD = '$p' or A.MNFIELD = 899 and A.MSFIELD = '$a' or A.MNFIELD = 899 and A.MSFIELD = '$w') " +
                             " and not exists (select 1 from BJVVV..DATAEXT C where C.IDDATA = A.IDDATA and C.MNFIELD = 921 and C.MSFIELD = '$c' and C.SORT = 'Списано')";
@@ -562,8 +572,8 @@ namespace ExportBJ_XML.classes
                         case "899$a":
                             string UnifiedLocation = GetUnifiedLocation(r["PLAIN"].ToString());
                             writer.WritePropertyName("exemplar_location");
-                            writer.WriteValue(r["PLAIN"].ToString());
-                            AddField("Location", r["PLAIN"].ToString());
+                            writer.WriteValue(UnifiedLocation);
+                            AddField("Location", UnifiedLocation);
                             break;
                         case "482$a":
                             //Exemplar += "Приплетено к:" + r["PLAIN"].ToString() + "#";
@@ -811,13 +821,13 @@ namespace ExportBJ_XML.classes
         public override void ExportCovers()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("select IDMAIN from BJVVV..IMAGES");
+            sb.Append("select IDMAIN from "+this.Fund+"..IMAGES");
 
             DataTable table = ExecuteQuery(sb.ToString());
             foreach (DataRow row in table.Rows)
             {
                 sb.Length = 0;
-                sb.AppendFormat("select PIC from BJVVV..IMAGES where IDMAIN = {0}", row["IDMAIN"].ToString());
+                sb.AppendFormat("select PIC from " + this.Fund + "..IMAGES where IDMAIN = {0}", row["IDMAIN"].ToString());
                 DataTable pics = ExecuteQuery(sb.ToString());
                 int i = 0;
                 //using (new NetworkConnection(_directoryPath, new NetworkCredential("BJStor01\\imgview", "Image_123Viewer")))
@@ -832,7 +842,7 @@ namespace ExportBJ_XML.classes
                     byte[] p = (byte[])pic["PIC"];
                     MemoryStream ms = new MemoryStream(p);
                     Image img = Image.FromStream(ms);
-                    string path = @"f:\import\covers\bjvvv\" + row["IDMAIN"].ToString() + @"\";
+                    string path = @"f:\import\covers\"+this.Fund.ToLower()+"\\" + row["IDMAIN"].ToString() + @"\";
                     if (!Directory.Exists(path))
                     {
                         Directory.CreateDirectory(path);
@@ -937,7 +947,7 @@ namespace ExportBJ_XML.classes
             string Another_author_AF_all = "";
             foreach (DataRow r in table.Rows)
             {
-                Another_author_AF_all += r["PLAIN"].ToString() + " ";
+                Another_author_AF_all += r["PLAIN"].ToString() + "; ";
             }
             return Another_author_AF_all;
         }
@@ -995,6 +1005,7 @@ namespace ExportBJ_XML.classes
             }
             return ds.Tables["t"];
         }
+
         private string GetUnifiedLocation(string location)
         {
             string result = location;
@@ -1031,8 +1042,207 @@ namespace ExportBJ_XML.classes
                 case "…Хран… Сектор книгохранения - 0 этаж":
                     result = "Книгохранение";
                     break;
-                
-
+                case "…Хран… Сектор книгохранения - 2 этаж":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… Сектор книгохранения - 3 этаж":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… Сектор книгохранения - 4 этаж":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… Сектор книгохранения - 5 этаж":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… Сектор книгохранения - 6 этаж":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… Сектор книгохранения - 7 этаж":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… Сектор книгохранения - Абонемент":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… Сектор книгохранения - Новая периодика":
+                    result = "Книгохранение";
+                    break;
+                case "…Хран… КНИО Группа хранения редкой книги":
+                    result = "Книгохранение редкой книги";
+                    break;
+                case "Книжный клуб":
+                    result = "Книжный клуб 1 этаж";
+                    break;
+                case "…ЗалФ… ЦМС ОР Культурный центр Франкотека":
+                    result = "Культурный центр \"Франкотека\" 2 этаж";
+                    break;
+                case "…ЗалФ… ЦМС ОР Лингвистический ресурсный центр Pearson":
+                    result = "Лингвистический ресурсный центр Pearson 3 этаж";
+                    break;
+                case "КНИО - Комплексный научно-исследовательский отдел":
+                    result = "Научно-исследовательский отдел";
+                    break;
+                case "…Обраб… КО КОД Сектор ОД - Группа инвентаризации":
+                    result = "Обработка в группе инвентаризации";
+                    break;
+                case "…Обраб… КО КОД Сектор ОД - Группа каталогизации":
+                    result = "Обработка в группе каталогизации";
+                    break;
+                case "…Обраб… КО ХКРФ Сектор микрофильмирования":
+                    result = "Обработка в группе микрофильмирования";
+                    break;
+                case "…Обраб… ЦИИТ Группа оцифровки":
+                    result = "Обработка в группе оцифровки";
+                    break;
+                case "…Обраб… КО КОД Сектор ОД - Группа систематизации":
+                    result = "Обработка в группе систематизации";
+                    break;
+                case "…Обраб… КО КОД Сектор комплектования":
+                    result = "Обработка в секторе комплектования";
+                    break;
+                case "…Обраб… КО ХКРФ Сектор научной реставрации":
+                    result = "Обработка в секторе научной реставрации";
+                    break;
+                case "…Хран… Сектор книгохранения - Овальный зал":
+                    result = "Овальный зал";
+                    break;
+                case "КО КОД - Комплексный отдел комплектования и обработки документов":
+                    result = "Отдел комплектования";
+                    break;
+                case "КОО - Комплексный отдел обслуживания":
+                    result = "Отдел обслуживания";
+                    break;
+                case "КОО Группа регистрации":
+                    result = "Отдел обслуживания";
+                    break;
+                case "КО ХКРФ - Комплексный отдел хранения, консервации и реставрации фондов":
+                    result = "Отдел хранения и реставрации";
+                    break;
+                case "ЦКПП Редакционно-издательский отдел":
+                    result = "Редакционно-издательский отдел";
+                    break;
+                case "КО ХКРФ Сектор книгохранения":
+                    result = "Сектор книгохранения";
+                    break;
+                case "КО КОД Сектор ОД":
+                    result = "Сектор обработки документов";
+                    break;
+                case "…Хран… ЦИИТ Сервера библиотеки":
+                    result = "Сервера библиотеки";
+                    break;
+                case "Д Бухгалтерия":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д Группа экспедиторского обслуживания":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д Контрактная служба":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д Отдел PR и редакция сайта":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д Отдел безопасности":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д Отдел внутреннего финансового контроля":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д Отдел по работе с персоналом":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д Отдел финансового планирования и сводной отчетности":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д УЭ - Управление по эксплуатации объектов недвижимости и обеспечения деятельности":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д УЭ Служба материально-технического обеспечения":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д УЭ Служба управления инженерными системами":
+                    result = "Служебные подразделения";
+                    break;
+                case "Д УЭ Служба эксплуатации зданий и благоустройства":
+                    result = "Служебные подразделения";
+                    break;
+                case "ЦБИД - Центр библиотечно-информационной деятельности и поддержки чтения":
+                    result = "Служебные подразделения";
+                    break;
+                case "…ЗалФ… ЦМС ОР Центр американской культуры":
+                    result = "Центр американской культуры 3 этаж";
+                    break;
+                case "ЦИИТ - Центр инновационных информационных технологий":
+                    result = "Центр инновационных информационных технологий";
+                    break;
+                case "ЦИИТ Группа IT":
+                    result = "Центр инновационных информационных технологий";
+                    break;
+                case "ЦИИТ Группа автоматизации":
+                    result = "Центр инновационных информационных технологий";
+                    break;
+                case "ЦИИТ Группа развития":
+                    result = "Центр инновационных информационных технологий";
+                    break;
+                case "ЦКПП - Центр культурно-просветительских программ":
+                    result = "Центр культурно-просветительских программ";
+                    break;
+                case "ЦМС - Центр международного сотрудничества":
+                    result = "Центр международного сотрудничества";
+                    break;
+                case "ЦМС ОР - Отдел развития":
+                    result = "Центр международного сотрудничества";
+                    break;
+                case "ЦМС ОР Отдел японской культуры":
+                    result = "Центр международного сотрудничества";
+                    break;
+                case "ЦМС Отдел международного протокола":
+                    result = "Центр международного сотрудничества";
+                    break;
+                case "ЦМРС - Центр межрегионального сотрудничества":
+                    result = "Центр межрегионального сотрудничества";
+                    break;
+                case "…ЗалФ… ЦМС ОР Центр славянских культур":
+                    result = "Центр славянских культур 4 этаж";
+                    break;
+                case "…Зал… КОО Группа читального зала 3 этаж":
+                    result = "Читальный зал 3 этаж";
+                    break;
+                case "…Зал… КОО Группа электронного зала 2 этаж":
+                    result = "Электронный зал 2 этаж";
+                    break;
+                case "American cultural center":
+                    result = "Центр американской культуры 3 этаж";
+                    break;
+                case "American cultural center(!)":
+                    result = "Центр американской культуры 3 этаж";
+                    break;
+                case "Выездная библиотека":
+                    result = "Центр американской культуры 3 этаж";
+                    break;
+                case "Франкотека":
+                    result = "Культурный центр \"Франкотека\" 2 этаж";
+                    break;
+                case "Francothèque":
+                    result = "Культурный центр \"Франкотека\" 2 этаж";
+                    break;
+                case "Центр славянских культур":
+                    result = "Центр славянских культур 4 этаж";
+                    break;
+                case "КО автоматизации":
+                    result = "Центр инновационных информационных технологий";
+                    break;
+                case "КО комплектования и ОД. Сектор комплектования – группа регистрации":
+                    result = "Отдел комплектования";
+                    break;
+                case "КО обслуживания – зал абонементного обслуживания":
+                    result = "Зал абонементного обслуживания 2 этаж";
+                    break;
+                case "Сектор научной реставрации":
+                    result = "Отдел хранения и реставрации";
+                    break;
+                default:
+                    result = "нет данных";
+                    break;
             }
 
             return result;

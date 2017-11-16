@@ -37,16 +37,16 @@
             this.label4 = new System.Windows.Forms.Label();
             this.button3 = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.bjvvv = new System.Windows.Forms.Button();
+            this.btnbjvvv = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
-            this.redkostj = new System.Windows.Forms.Button();
-            this.brit_sovet = new System.Windows.Forms.Button();
-            this.bjacc = new System.Windows.Forms.Button();
-            this.bjfcc = new System.Windows.Forms.Button();
-            this.bjscc = new System.Windows.Forms.Button();
-            this.period = new System.Windows.Forms.Button();
-            this.pearson = new System.Windows.Forms.Button();
-            this.litres = new System.Windows.Forms.Button();
+            this.btnredkostj = new System.Windows.Forms.Button();
+            this.btnbrit_sovet = new System.Windows.Forms.Button();
+            this.btnbjacc = new System.Windows.Forms.Button();
+            this.btnbjfcc = new System.Windows.Forms.Button();
+            this.btnbjscc = new System.Windows.Forms.Button();
+            this.btnPeriod = new System.Windows.Forms.Button();
+            this.btnPearson = new System.Windows.Forms.Button();
+            this.btnLitres = new System.Windows.Forms.Button();
             this.bjvvvCovers = new System.Windows.Forms.Button();
             this.litresCovers = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -123,15 +123,15 @@
             this.timer1.Interval = 1000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
-            // bjvvv
+            // btnbjvvv
             // 
-            this.bjvvv.Location = new System.Drawing.Point(12, 33);
-            this.bjvvv.Name = "bjvvv";
-            this.bjvvv.Size = new System.Drawing.Size(75, 23);
-            this.bjvvv.TabIndex = 7;
-            this.bjvvv.Text = "bjvvv";
-            this.bjvvv.UseVisualStyleBackColor = true;
-            this.bjvvv.Click += new System.EventHandler(this.bjvvv_Click);
+            this.btnbjvvv.Location = new System.Drawing.Point(12, 33);
+            this.btnbjvvv.Name = "btnbjvvv";
+            this.btnbjvvv.Size = new System.Drawing.Size(75, 23);
+            this.btnbjvvv.TabIndex = 7;
+            this.btnbjvvv.Text = "bjvvv";
+            this.btnbjvvv.UseVisualStyleBackColor = true;
+            this.btnbjvvv.Click += new System.EventHandler(this.bjvvv_Click);
             // 
             // textBox1
             // 
@@ -141,85 +141,85 @@
             this.textBox1.Size = new System.Drawing.Size(444, 252);
             this.textBox1.TabIndex = 8;
             // 
-            // redkostj
+            // btnredkostj
             // 
-            this.redkostj.Location = new System.Drawing.Point(12, 62);
-            this.redkostj.Name = "redkostj";
-            this.redkostj.Size = new System.Drawing.Size(75, 23);
-            this.redkostj.TabIndex = 9;
-            this.redkostj.Text = "redkostj";
-            this.redkostj.UseVisualStyleBackColor = true;
-            this.redkostj.Click += new System.EventHandler(this.redkostj_Click);
+            this.btnredkostj.Location = new System.Drawing.Point(12, 62);
+            this.btnredkostj.Name = "btnredkostj";
+            this.btnredkostj.Size = new System.Drawing.Size(75, 23);
+            this.btnredkostj.TabIndex = 9;
+            this.btnredkostj.Text = "redkostj";
+            this.btnredkostj.UseVisualStyleBackColor = true;
+            this.btnredkostj.Click += new System.EventHandler(this.redkostj_Click);
             // 
-            // brit_sovet
+            // btnbrit_sovet
             // 
-            this.brit_sovet.Location = new System.Drawing.Point(12, 91);
-            this.brit_sovet.Name = "brit_sovet";
-            this.brit_sovet.Size = new System.Drawing.Size(75, 23);
-            this.brit_sovet.TabIndex = 10;
-            this.brit_sovet.Text = "brit_sovet";
-            this.brit_sovet.UseVisualStyleBackColor = true;
-            this.brit_sovet.Click += new System.EventHandler(this.brit_sovet_Click);
+            this.btnbrit_sovet.Location = new System.Drawing.Point(12, 91);
+            this.btnbrit_sovet.Name = "btnbrit_sovet";
+            this.btnbrit_sovet.Size = new System.Drawing.Size(75, 23);
+            this.btnbrit_sovet.TabIndex = 10;
+            this.btnbrit_sovet.Text = "brit_sovet";
+            this.btnbrit_sovet.UseVisualStyleBackColor = true;
+            this.btnbrit_sovet.Click += new System.EventHandler(this.brit_sovet_Click);
             // 
-            // bjacc
+            // btnbjacc
             // 
-            this.bjacc.Location = new System.Drawing.Point(12, 120);
-            this.bjacc.Name = "bjacc";
-            this.bjacc.Size = new System.Drawing.Size(75, 23);
-            this.bjacc.TabIndex = 10;
-            this.bjacc.Text = "bjacc";
-            this.bjacc.UseVisualStyleBackColor = true;
-            this.bjacc.Click += new System.EventHandler(this.bjacc_Click);
+            this.btnbjacc.Location = new System.Drawing.Point(12, 120);
+            this.btnbjacc.Name = "btnbjacc";
+            this.btnbjacc.Size = new System.Drawing.Size(75, 23);
+            this.btnbjacc.TabIndex = 10;
+            this.btnbjacc.Text = "bjacc";
+            this.btnbjacc.UseVisualStyleBackColor = true;
+            this.btnbjacc.Click += new System.EventHandler(this.bjacc_Click);
             // 
-            // bjfcc
+            // btnbjfcc
             // 
-            this.bjfcc.Location = new System.Drawing.Point(12, 149);
-            this.bjfcc.Name = "bjfcc";
-            this.bjfcc.Size = new System.Drawing.Size(75, 23);
-            this.bjfcc.TabIndex = 10;
-            this.bjfcc.Text = "bjfcc";
-            this.bjfcc.UseVisualStyleBackColor = true;
-            this.bjfcc.Click += new System.EventHandler(this.bjfcc_Click);
+            this.btnbjfcc.Location = new System.Drawing.Point(12, 149);
+            this.btnbjfcc.Name = "btnbjfcc";
+            this.btnbjfcc.Size = new System.Drawing.Size(75, 23);
+            this.btnbjfcc.TabIndex = 10;
+            this.btnbjfcc.Text = "bjfcc";
+            this.btnbjfcc.UseVisualStyleBackColor = true;
+            this.btnbjfcc.Click += new System.EventHandler(this.bjfcc_Click);
             // 
-            // bjscc
+            // btnbjscc
             // 
-            this.bjscc.Location = new System.Drawing.Point(12, 178);
-            this.bjscc.Name = "bjscc";
-            this.bjscc.Size = new System.Drawing.Size(75, 23);
-            this.bjscc.TabIndex = 10;
-            this.bjscc.Text = "bjscc";
-            this.bjscc.UseVisualStyleBackColor = true;
-            this.bjscc.Click += new System.EventHandler(this.bjscc_Click);
+            this.btnbjscc.Location = new System.Drawing.Point(12, 178);
+            this.btnbjscc.Name = "btnbjscc";
+            this.btnbjscc.Size = new System.Drawing.Size(75, 23);
+            this.btnbjscc.TabIndex = 10;
+            this.btnbjscc.Text = "bjscc";
+            this.btnbjscc.UseVisualStyleBackColor = true;
+            this.btnbjscc.Click += new System.EventHandler(this.bjscc_Click);
             // 
-            // period
+            // btnPeriod
             // 
-            this.period.Location = new System.Drawing.Point(12, 207);
-            this.period.Name = "period";
-            this.period.Size = new System.Drawing.Size(75, 23);
-            this.period.TabIndex = 10;
-            this.period.Text = "period";
-            this.period.UseVisualStyleBackColor = true;
-            this.period.Click += new System.EventHandler(this.period_Click);
+            this.btnPeriod.Location = new System.Drawing.Point(12, 207);
+            this.btnPeriod.Name = "btnPeriod";
+            this.btnPeriod.Size = new System.Drawing.Size(75, 23);
+            this.btnPeriod.TabIndex = 10;
+            this.btnPeriod.Text = "period";
+            this.btnPeriod.UseVisualStyleBackColor = true;
+            this.btnPeriod.Click += new System.EventHandler(this.period_Click);
             // 
-            // pearson
+            // btnPearson
             // 
-            this.pearson.Location = new System.Drawing.Point(12, 236);
-            this.pearson.Name = "pearson";
-            this.pearson.Size = new System.Drawing.Size(75, 23);
-            this.pearson.TabIndex = 10;
-            this.pearson.Text = "pearson";
-            this.pearson.UseVisualStyleBackColor = true;
-            this.pearson.Click += new System.EventHandler(this.pearson_Click);
+            this.btnPearson.Location = new System.Drawing.Point(12, 236);
+            this.btnPearson.Name = "btnPearson";
+            this.btnPearson.Size = new System.Drawing.Size(75, 23);
+            this.btnPearson.TabIndex = 10;
+            this.btnPearson.Text = "pearson";
+            this.btnPearson.UseVisualStyleBackColor = true;
+            this.btnPearson.Click += new System.EventHandler(this.pearson_Click);
             // 
-            // litres
+            // btnLitres
             // 
-            this.litres.Location = new System.Drawing.Point(12, 265);
-            this.litres.Name = "litres";
-            this.litres.Size = new System.Drawing.Size(75, 23);
-            this.litres.TabIndex = 10;
-            this.litres.Text = "litres";
-            this.litres.UseVisualStyleBackColor = true;
-            this.litres.Click += new System.EventHandler(this.litres_Click);
+            this.btnLitres.Location = new System.Drawing.Point(12, 265);
+            this.btnLitres.Name = "btnLitres";
+            this.btnLitres.Size = new System.Drawing.Size(75, 23);
+            this.btnLitres.TabIndex = 10;
+            this.btnLitres.Text = "litres";
+            this.btnLitres.UseVisualStyleBackColor = true;
+            this.btnLitres.Click += new System.EventHandler(this.litres_Click);
             // 
             // bjvvvCovers
             // 
@@ -239,6 +239,7 @@
             this.litresCovers.TabIndex = 11;
             this.litresCovers.Text = "litresCovers";
             this.litresCovers.UseVisualStyleBackColor = true;
+            this.litresCovers.Click += new System.EventHandler(this.litresCovers_Click);
             // 
             // Form1
             // 
@@ -247,16 +248,16 @@
             this.ClientSize = new System.Drawing.Size(693, 450);
             this.Controls.Add(this.litresCovers);
             this.Controls.Add(this.bjvvvCovers);
-            this.Controls.Add(this.litres);
-            this.Controls.Add(this.pearson);
-            this.Controls.Add(this.period);
-            this.Controls.Add(this.bjscc);
-            this.Controls.Add(this.bjfcc);
-            this.Controls.Add(this.bjacc);
-            this.Controls.Add(this.brit_sovet);
-            this.Controls.Add(this.redkostj);
+            this.Controls.Add(this.btnLitres);
+            this.Controls.Add(this.btnPearson);
+            this.Controls.Add(this.btnPeriod);
+            this.Controls.Add(this.btnbjscc);
+            this.Controls.Add(this.btnbjfcc);
+            this.Controls.Add(this.btnbjacc);
+            this.Controls.Add(this.btnbrit_sovet);
+            this.Controls.Add(this.btnredkostj);
             this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.bjvvv);
+            this.Controls.Add(this.btnbjvvv);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
@@ -277,20 +278,20 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.Button bjvvv;
+        private System.Windows.Forms.Button btnbjvvv;
         public System.Windows.Forms.Label label1;
         public System.Windows.Forms.Label label2;
         public System.Windows.Forms.Label label3;
         public System.Windows.Forms.Label label4;
         public System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button redkostj;
-        private System.Windows.Forms.Button brit_sovet;
-        private System.Windows.Forms.Button bjacc;
-        private System.Windows.Forms.Button bjfcc;
-        private System.Windows.Forms.Button bjscc;
-        private System.Windows.Forms.Button period;
-        private System.Windows.Forms.Button pearson;
-        private System.Windows.Forms.Button litres;
+        private System.Windows.Forms.Button btnredkostj;
+        private System.Windows.Forms.Button btnbrit_sovet;
+        private System.Windows.Forms.Button btnbjacc;
+        private System.Windows.Forms.Button btnbjfcc;
+        private System.Windows.Forms.Button btnbjscc;
+        private System.Windows.Forms.Button btnPeriod;
+        private System.Windows.Forms.Button btnPearson;
+        private System.Windows.Forms.Button btnLitres;
         private System.Windows.Forms.Button bjvvvCovers;
         private System.Windows.Forms.Button litresCovers;
     }

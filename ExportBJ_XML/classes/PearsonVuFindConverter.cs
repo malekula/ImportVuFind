@@ -37,7 +37,9 @@ namespace ExportBJ_XML.classes
             {
                 AddField("title", token["catalog"]["title"]["default"].ToString());
                 AddField("title_short", token["catalog"]["title"]["default"].ToString());
+                AddField("title_sort", token["catalog"]["title"]["default"].ToString());
                 AddField("author", token["catalog"]["options"]["Authors"].ToString());
+                AddField("author_sort", token["catalog"]["options"]["Authors"].ToString());
                 AddField("Country", token["catalog"]["options"]["Country of publication"].ToString());
                 AddField("publisher", token["catalog"]["options"]["Publisher"].ToString());
                 AddField("publishDate", token["catalog"]["options"]["Publishing date"].ToString().Split('.')[2]);
@@ -91,8 +93,9 @@ namespace ExportBJ_XML.classes
 
                 //OnRecordExported
                 cnt++;
-                //_f1.label2.Text = "Pearson_" + cnt++;
-                //Application.DoEvents();
+                VuFindConverterEventArgs args = new VuFindConverterEventArgs();
+                args.RecordId = "Pearson_" + token["id"].ToString();
+                OnRecordExported(args);
             }
             _objXmlWriter.Flush();
             _objXmlWriter.Close();
