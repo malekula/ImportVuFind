@@ -29,7 +29,7 @@ namespace ExportBJ_XML
         LitresVuFindConverter litres = new LitresVuFindConverter();
         PeriodVuFindConverter period = new PeriodVuFindConverter();
         PearsonVuFindConverter pearson = new PearsonVuFindConverter();
-
+        JBHVuFindConverter jbh = new JBHVuFindConverter();
 
         public Form1()
         {
@@ -101,6 +101,8 @@ namespace ExportBJ_XML
 
         private void button2_Click(object sender, EventArgs e)
         {
+            pearson.GetPearsonSourceData();
+            
             //XDocument xdoc = XDocument.Load(@"f:\import\bjvvv.xml");
             //var books = xdoc.Descendants("doc");
             //var dublicates = xdoc
@@ -162,46 +164,39 @@ namespace ExportBJ_XML
             
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
+       
+        #region вставить новые пароли литрес
+
+        //SqlDataAdapter da = new SqlDataAdapter();
+        ////da.SelectCommand = new SqlCommand();
+        ////da.SelectCommand.Connection = new SqlConnection();
+        ////da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
+        ////da.SelectCommand.CommandText = "select * from BJVVV..DATAEXT where MNFIELD = 230";
+        ////DataSet ds = new DataSet();
+        ////int i = da.Fill(ds, "t");
+        ////da.SelectCommand.CommandText = "select * from BJVVV..DATAEXTPLAIN where ID = 3";
+        ////i = da.Fill(ds, "t");
+
+        //da = new SqlDataAdapter();
+        //da.InsertCommand = new SqlCommand();
+        //da.InsertCommand.Connection = new SqlConnection();
+        //da.InsertCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
+        //da.InsertCommand.Connection.Open();
+        //StreamReader sr = new StreamReader(@"f:\Lib_100S25642.txt");
+        //string account;
+        //while (sr.Peek() >= 0)
+        //{
+        //    account = sr.ReadLine();
+        //    da.InsertCommand.Parameters.Clear();
+        //    da.InsertCommand.Parameters.AddWithValue("login",account.Split(',')[0]);
+        //    da.InsertCommand.Parameters.AddWithValue("pwd",account.Split(',')[1]);
+        //    da.InsertCommand.CommandText = "insert into LITRES..ACCOUNTS (LRLOGIN,LRPWD,CREATED) values (@login, @pwd, getdate())";
+        //    da.InsertCommand.ExecuteNonQuery();
+        //}
+        //da.InsertCommand.Connection.Close();
 
 
-
-            //вставить новые пароли литрес
-
-            //SqlDataAdapter da = new SqlDataAdapter();
-            ////da.SelectCommand = new SqlCommand();
-            ////da.SelectCommand.Connection = new SqlConnection();
-            ////da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536";
-            ////da.SelectCommand.CommandText = "select * from BJVVV..DATAEXT where MNFIELD = 230";
-            ////DataSet ds = new DataSet();
-            ////int i = da.Fill(ds, "t");
-            ////da.SelectCommand.CommandText = "select * from BJVVV..DATAEXTPLAIN where ID = 3";
-            ////i = da.Fill(ds, "t");
-
-            //da = new SqlDataAdapter();
-            //da.InsertCommand = new SqlCommand();
-            //da.InsertCommand.Connection = new SqlConnection();
-            //da.InsertCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
-            //da.InsertCommand.Connection.Open();
-            //StreamReader sr = new StreamReader(@"f:\Lib_100S25642.txt");
-            //string account;
-            //while (sr.Peek() >= 0)
-            //{
-            //    account = sr.ReadLine();
-            //    da.InsertCommand.Parameters.Clear();
-            //    da.InsertCommand.Parameters.AddWithValue("login",account.Split(',')[0]);
-            //    da.InsertCommand.Parameters.AddWithValue("pwd",account.Split(',')[1]);
-            //    da.InsertCommand.CommandText = "insert into LITRES..ACCOUNTS (LRLOGIN,LRPWD,CREATED) values (@login, @pwd, getdate())";
-            //    da.InsertCommand.ExecuteNonQuery();
-            //}
-            //da.InsertCommand.Connection.Close();
-
-            
-
-
-
-        }
+        #endregion
 
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -249,14 +244,15 @@ namespace ExportBJ_XML
 
             bjvvv.Export();
             redkostj.Export();
-            bjacc.Export();
-            bjfcc.Export();
-            bjscc.Export();
+            //bjacc.Export();
+            //bjfcc.Export();
+            //bjscc.Export();
             brit_sovet.Export();
-            pearson.Export();
-            litres.GetLitresSourceData();
-            litres.Export();
-            period.Export();
+            //pearson.GetPearsonSourceData();
+            //pearson.Export();
+            //litres.GetLitresSourceData();
+            //litres.Export();
+            //period.Export();
 
             StopTimer();
 
@@ -311,6 +307,13 @@ namespace ExportBJ_XML
             StopTimer();
         }
 
+        private void btnJBH_Click(object sender, EventArgs e)
+        {
+            StartTimer();
+            jbh.Export();
+            StopTimer();
+        }
+
         private void bjvvvCovers_Click(object sender, EventArgs e)
         {
             StartTimer();
@@ -327,5 +330,94 @@ namespace ExportBJ_XML
             litres.ExportCovers();
             StopTimer();
         }
+
+        private void allCovers_Click(object sender, EventArgs e)
+        {
+            StartTimer();
+
+            bjvvv.ExportCovers();
+            redkostj.ExportCovers();
+            brit_sovet.ExportCovers();
+            bjacc.ExportCovers();
+            bjfcc.ExportCovers();
+            bjscc.ExportCovers();
+            //litres.ExportCovers();
+            //pearson.ExportCovers();
+            //period.ExportCovers();
+
+
+            StopTimer();
+        }
+
+        private void getLitresSource_Click(object sender, EventArgs e)
+        {
+            litres.GetLitresSourceData();
+        }
+
+        private void getPearsonSource_Click(object sender, EventArgs e)
+        {
+            pearson.GetPearsonSourceData();
+        }
+
+        private void pearsonCovers_Click(object sender, EventArgs e)
+        {
+            StartTimer();
+            pearson.ExportCovers();
+            StopTimer();
+        }
+
+        private void exportSingleRecord_Click(object sender, EventArgs e)
+        {
+            if (txtSingleRecordId.Text == "")
+            {
+                MessageBox.Show("Введите Id записи");
+                return;
+            }
+
+            string fund = txtSingleRecordId.Text.Substring(0,txtSingleRecordId.Text.LastIndexOf("_"));
+            string id = txtSingleRecordId.Text.Substring(txtSingleRecordId.Text.LastIndexOf("_")+1);
+            switch (fund)
+            {
+                case "BJVVV":
+                    bjvvv.ExportSingleRecord(id);
+                    break;
+                case "REDKOSTJ":
+                    redkostj.ExportSingleRecord(id);
+                    break;
+                case "BRIT_SOVET":
+                    brit_sovet.ExportSingleRecord(id);
+                    break;
+                case "BJACC":
+                    bjacc.ExportSingleRecord(id);
+                    break;
+                case "BJFCC":
+                    bjfcc.ExportSingleRecord(id);
+                    break;
+                case "BJSCC":
+                    bjscc.ExportSingleRecord(id);
+                    break;
+                case "LITRES":
+                    litres.ExportSingleRecord(id);
+                    break;
+                case "PEARSON":
+                    pearson.ExportSingleRecord(id);
+                    break;
+                case "PERIOD":
+                    period.ExportSingleRecord(id);
+                    break;
+            }
+        }
+
+        private void btnGetJBHSource_Click(object sender, EventArgs e)
+        {
+            //просто конвертируем РТФ в обычный текст
+            jbh.GetSource();
+
+        }
+
+
+      
+
+      
     }
 }

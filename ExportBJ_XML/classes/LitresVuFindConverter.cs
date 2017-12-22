@@ -95,7 +95,20 @@ namespace ExportBJ_XML.classes
                     }
                 }
                 AddField("author", work.ToString());
-                AddField("author_sort", work.ToString());
+                if (work.ToString() != string.Empty)
+                {
+                    if (work.ToString()[0] == '(')
+                    {
+                        AddField("author_sort", work.ToString());
+                    }
+                    else
+                    {
+                        AddField("author_sort", work.ToString().Substring(1));
+                    }
+                }
+
+                
+
 
                 work.Length = 0;
 
@@ -189,13 +202,15 @@ namespace ExportBJ_XML.classes
                 writer.WriteValue("Да");
                 writer.WritePropertyName("exemplar_id");
                 writer.WriteValue("ebook");//вообще это iddata, но тут любой можно,поскольку всегда свободно
+                writer.WritePropertyName("exemplar_location");
+                writer.WriteValue("Интернет");
 
                 writer.WriteEndObject();
                 writer.WriteEndObject();
 
 
                 AddField("MethodOfAccess", "Удалённый доступ");
-                AddField("Location", "internet");
+                AddField("Location", "Интернет");
                 AddField("Exemplar", sb.ToString());
                 AddField("id", "Litres_" + elt.Attribute("id").Value);
                 AddField("fund", "Литрес");
@@ -216,7 +231,7 @@ namespace ExportBJ_XML.classes
         }
 
 
-        public override void ExportSingleRecord(int idmain)
+        public override void ExportSingleRecord(string idmain)
         {
             throw new NotImplementedException();
         }
@@ -229,8 +244,18 @@ namespace ExportBJ_XML.classes
             var allBook = xdoc.Descendants("updated-book");
             foreach (XElement elt in allBook)
             {
-                Uri url = new Uri("http://partnersdnld.litres.ru/static/bookimages/00/01/23/00012345.bin.dir/00012345.cover.jpg");
-                string id = elt.Attribute("id").Value;
+                //Uri url = new Uri("http://partnersdnld.litres.ru/static/bookimages/00/01/23/00012345.bin.dir/00012345.cover.jpg");
+                //Uri url = new Uri("http://partnersdnld.litres.ru/static/bookimages/21/10/35/21103582.bin.dir/21103582.cover.jpg");
+
+                string id = "";
+                if (elt.Attribute("file_id") != null)
+                {
+                    id = elt.Attribute("file_id").Value;
+                }
+                else
+                {
+                    continue;
+                }
                 switch (id.Length)
                 {
                     case 0:
@@ -270,53 +295,12 @@ namespace ExportBJ_XML.classes
                 fileName.Append(path).Append("cover.").Append(coverType);
                 
 
-                DownloadRemoteImageFile(coverUrl, fileName.ToString(), path);
+                Extensions.DownloadRemoteImageFile(coverUrl, fileName.ToString(), path);
 
                 VuFindConverterEventArgs e = new VuFindConverterEventArgs();
                 e.RecordId = "litres_" + elt.Attribute("id").Value;
                 OnRecordExported(e);
-            }
-        }
-        private void DownloadRemoteImageFile(string uri, string fileName, string path)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-            HttpWebResponse response;
-            try
-            {
-                response = (HttpWebResponse)request.GetResponse();
-            }
-            catch
-            {
-                return;
-            }
-
-            // Check that the remote file was found. The ContentType
-            // check is performed since a request for a non-existent
-            // image file might be redirected to a 404-page, which would
-            // yield the StatusCode "OK", even though the image was not
-            // found.
-            if ((response.StatusCode == HttpStatusCode.OK ||
-                response.StatusCode == HttpStatusCode.Moved ||
-                response.StatusCode == HttpStatusCode.Redirect) &&
-                response.ContentType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                // if the remote file was found, download oit
-                using (Stream inputStream = response.GetResponseStream())
-                using (Stream outputStream = File.OpenWrite(fileName))
-                {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    do
-                    {
-                        bytesRead = inputStream.Read(buffer, 0, buffer.Length);
-                        outputStream.Write(buffer, 0, bytesRead);
-                    } while (bytesRead != 0);
-                }
+                GC.Collect();
             }
         }
 

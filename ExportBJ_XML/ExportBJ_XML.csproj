@@ -57,11 +57,14 @@
   <ItemGroup>
     <Compile Include="classes\BJVuFindConverter.cs" />
     <Compile Include="classes\Extensions.cs" />
+    <Compile Include="classes\JBHVuFindConverter.cs" />
     <Compile Include="classes\LitresVuFindConverter.cs" />
     <Compile Include="classes\PearsonVuFindConverter.cs" />
+    <Compile Include="classes\PeriodTreeLoader.cs" />
     <Compile Include="classes\PeriodVuFindConverter.cs" />
     <Compile Include="classes\VuFindConverter.cs" />
     <Compile Include="classes\VuFindConverterEventArgs.cs" />
+    <Compile Include="classes\VuFindDoc.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

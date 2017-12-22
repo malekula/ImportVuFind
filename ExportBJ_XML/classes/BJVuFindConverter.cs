@@ -86,9 +86,9 @@ namespace ExportBJ_XML.classes
             File.WriteAllLines(@"f:\import\importErrors\" + this.Fund + "Errors.txt", errors.ToArray());
 
         }
-        public override void ExportSingleRecord( int idmain )
+        public override void ExportSingleRecord( string idmain )
         {
-            _objXmlWriter = XmlTextWriter.Create(@"F:\import\" + this.Fund + "_" + idmain + ".xml");
+            _objXmlWriter = XmlTextWriter.Create(@"F:\import\singleRecords\" + this.Fund + "_" + idmain + ".xml");
 
             _exportDocument = new XmlDocument();
             XmlNode decalrationNode = _exportDocument.CreateXmlDeclaration("1.0", "UTF-8", null);
@@ -103,7 +103,7 @@ namespace ExportBJ_XML.classes
             /////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////TEST/////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////
-            string q = GetQuery( idmain );
+            string q = GetQuery( int.Parse(idmain) );
             DataTable table = ExecuteQuery(q);
             int check = CreateBJDoc( table );
             if (check == 1) return;
@@ -442,12 +442,12 @@ namespace ExportBJ_XML.classes
                         break;
                     case "940$a":
                         AddField("HyperLink", r["PLAIN"].ToString());
-                        AddField("Location", "Удалённый доступ");
+                        AddField("MethodOfAccess", "Удалённый доступ");
                         break;
                     case "606$a"://"""""" • """"""
                         query = "select * " +
-                                " from BJVVV..TPR_CHAIN A " +
-                                " left join BJVVV..TPR_TES B on A.IDTES = B.ID " +
+                                " from "+this.Fund+"..TPR_CHAIN A " +
+                                " left join "+this.Fund+"..TPR_TES B on A.IDTES = B.ID " +
                                 " where A.IDCHAIN = " + r["SORT"].ToString() +
                                 " order by IDORDER";
                         clarify = ExecuteQuery(query);
@@ -483,9 +483,6 @@ namespace ExportBJ_XML.classes
                         break;
                     case "3200$a":
                         AddField("IllustrationMaterial", r["PLAIN"].ToString());
-                        break;
-                    case "899$a":
-                        AddField("Location", r["PLAIN"].ToString());
                         break;
                 }
 
@@ -553,6 +550,12 @@ namespace ExportBJ_XML.classes
             DataTable exemplar;
             int cnt = 1;
             //ser.Serialize(
+            string f_899b = "";
+            string f_899a = "";
+            string f_899p = "";
+            string f_899x = "";
+            string f_921c = "";
+
             foreach (DataRow iddata in table.Rows)
             {
                 query = " select * from " + fund + "..DATAEXT A" +
@@ -574,6 +577,7 @@ namespace ExportBJ_XML.classes
                             writer.WritePropertyName("exemplar_location");
                             writer.WriteValue(UnifiedLocation);
                             AddField("Location", UnifiedLocation);
+                            f_899a = r["PLAIN"].ToString();
                             break;
                         case "482$a":
                             //Exemplar += "Приплетено к:" + r["PLAIN"].ToString() + "#";
@@ -582,35 +586,10 @@ namespace ExportBJ_XML.classes
                             break;
                         case "899$b"://тут надо оставить только коллекции
                             string fnd = r["PLAIN"].ToString();
-                            if ((fnd == "ОФ") || (fnd == "Фонд редкой книги") || (fnd == "Фонд Редкой книги") || (fnd == "ОФ - Восток"))//надо определить что коллекция, что фонд, а что на дом.
-                            {
-                                AddField("MethodOfAccess", "В помещении библиотеки");
-                                //Exemplar += "Доступ: Заказать через личный кабинет в зал библиотеки#";
-                                writer.WritePropertyName("Access");
-                                writer.WriteValue("Заказать через личный кабинет в зал библиотеки");
-                            }
-                            else
-                            {
-                                AddField("collection", r["PLAIN"].ToString());
-                                //Exemplar += "Доступ: Заказать через личный кабинет в зал библиотеки#";
-                                writer.WritePropertyName("Access");
-                                writer.WriteValue("Заказать через личный кабинет в зал библиотеки");
-                            }
-                            if (fnd == "Абонемент")
-                            {
-                                AddField("MethodOfAccess", "На дом");
-                                //Exemplar += "Доступ: Заказать через личный кабинет на дом#";
-                                writer.WritePropertyName("Access");
-                                writer.WriteValue("Заказать через личный кабинет на дом");
-                            }
-                            if ((fund == "BJFCC") || (fund == "BJACC") || (fund == "BRIT_SOVET") || (fund == "BJSCC"))
-                            {
-                                AddField("MethodOfAccess", "На дом");
-                                //break;//тут надо оставить только коллекции
-                                //Exemplar += "Доступ: Проследовать в указанный зал для получения на дом#";
-                                writer.WritePropertyName("Access");
-                                writer.WriteValue("Проследовать в указанный зал для получения на дом");
-                            }
+
+                            f_899b = r["PLAIN"].ToString();
+
+
 
                             //Exemplar += "Наименование фонда или коллекции:" + r["PLAIN"].ToString() + "#";
                             writer.WritePropertyName("exemplar_collection");
@@ -629,6 +608,7 @@ namespace ExportBJ_XML.classes
                             break;
                         case "899$j":
                             //Exemplar += "Расстановочный шифр:" + r["PLAIN"].ToString() + "#";
+                            AddField("PlacingCipher", r["PLAIN"].ToString());
                             writer.WritePropertyName("exemplar_placing_cipher");
                             writer.WriteValue(r["PLAIN"].ToString());
                             break;
@@ -636,6 +616,7 @@ namespace ExportBJ_XML.classes
                             //Exemplar += "Инвентарный номер:" + r["PLAIN"].ToString() + "#";
                             writer.WritePropertyName("exemplar_inventory_number");
                             writer.WriteValue(r["PLAIN"].ToString());
+                            f_899p = r["PLAIN"].ToString();
                             break;
                         case "899$w":
                             //Exemplar += "Штрихкод:" + r["PLAIN"].ToString() + "#";
@@ -646,6 +627,7 @@ namespace ExportBJ_XML.classes
                             //Exemplar += "Примечание к инвентарному номеру:" + r["PLAIN"].ToString() + "#";
                             writer.WritePropertyName("exemplar_inv_note");
                             writer.WriteValue(r["PLAIN"].ToString());
+                            f_899x = r["PLAIN"].ToString();
                             break;
                         case "921$a":
                             //Exemplar += "Носитель:" + r["PLAIN"].ToString() + "#";
@@ -656,12 +638,13 @@ namespace ExportBJ_XML.classes
                             //Exemplar += "Класс издания:" + r["PLAIN"].ToString() + "#";
                             writer.WritePropertyName("exemplar_class_edition");
                             writer.WriteValue(r["PLAIN"].ToString());
+                            f_921c = r["PLAIN"].ToString();
                             break;
-                        case "922$b":
+                        //case "922$b":
                             //Exemplar += "Трофей\\Принадлежность к:" + r["PLAIN"].ToString() + "#";
-                            writer.WritePropertyName("exemplar_trophy");
-                            writer.WriteValue(r["PLAIN"].ToString());
-                            break;
+                            //writer.WritePropertyName("exemplar_trophy");
+                           // writer.WriteValue(r["PLAIN"].ToString());
+                           // break;
                         case "3300$a":
                             //Exemplar += "Вид переплёта:" + r["PLAIN"].ToString() + "#";
                             writer.WritePropertyName("exemplar_binding_kind");
@@ -753,6 +736,13 @@ namespace ExportBJ_XML.classes
                 //Exemplar += "exemplar_id:" + ds.Tables["t"].Rows[0]["IDDATA"].ToString() + "#";
                 writer.WritePropertyName("exemplar_id");
                 writer.WriteValue(iddata["IDDATA"].ToString());
+
+                string exemplar_access = GetExemplarAccess(f_899a, f_899b, f_899p, f_921c, f_899x);
+
+                writer.WritePropertyName("exemplar_access");
+                writer.WriteValue(exemplar_access);
+
+
                 writer.WriteEndObject();
             }
 
@@ -786,9 +776,10 @@ namespace ExportBJ_XML.classes
                 DataTable hyperLinkTable = ExecuteQuery(query);
                 if (hyperLinkTable.Rows.Count != 0)
                 {
+                    bool ForAllReader = (bool)hyperLinkTable.Rows[0]["ForAllReader"];
                     //Exemplar += "Авторское право: " + ((ds.Tables["t"].Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть");
                     writer.WritePropertyName("exemplar_copyright");
-                    writer.WriteValue(((hyperLinkTable.Rows[0]["ForAllReader"].ToString() == "1") ? "нет" : "есть"));
+                    writer.WriteValue( (ForAllReader) ? "нет" : "есть" );
                     //Exemplar += "Ветхий оригинал: " + ((ds.Tables["t"].Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет");
                     writer.WritePropertyName("exemplar_old_original");
                     writer.WriteValue(((hyperLinkTable.Rows[0]["OldBook"].ToString() == "1") ? "да" : "нет"));
@@ -798,7 +789,7 @@ namespace ExportBJ_XML.classes
                     //Exemplar += "Доступ: Заказать через личный кабинет";
                     writer.WritePropertyName("exemplar_access");
                     writer.WriteValue(
-                        (hyperLinkTable.Rows[0]["ForAllReader"].ToString() == "1") ?
+                        (ForAllReader) ?
                         "Для прочтения онлайн необходимо перейти по ссылке" :
                         "Для прочтения онлайн необходимо положить в корзину и заказать через личный кабинет");
                     writer.WritePropertyName("exemplar_carrier");
@@ -806,10 +797,14 @@ namespace ExportBJ_XML.classes
 
                     writer.WritePropertyName("exemplar_id");
                     writer.WriteValue("ebook");//для всех у кого есть электронная копия. АПИ когда это значение встретит, сразу вернёт "доступно"
+                    writer.WritePropertyName("exemplar_location");
+                    writer.WriteValue("Интернет");
 
                 }
                 writer.WriteEndObject();
                 AddField("MethodOfAccess", "Удалённый доступ");
+
+                //определить структуру, в которую полностью запись ложится и здесь её проверять, чтобы правильно вычисляемые поля проставить.
             }
             writer.WriteEndObject();
             writer.Flush();
@@ -818,25 +813,74 @@ namespace ExportBJ_XML.classes
             AddField("Exemplar", sb.ToString());
         }
 
+        private string GetExemplarAccess(string f_899a, string f_899b, string f_899p, string f_921c, string f_899x)
+        {
+            string access = "";
+            if ((this.Fund == "BJFCC") || (this.Fund == "BJACC") || (this.Fund == "BRIT_SOVET"))
+            {
+                access = "Проследовать в указанный зал для получения на дом";
+                return access;
+            }
+
+            if ((f_899b.ToLower() == "абонемент") && (f_899a.ToLower().Contains("книгохранен")))
+            {
+                access = "Заказать через личный кабинет на дом";
+                AddField("MethodOfAccess", "На дом");
+                return access;
+            }
+            if ((f_899b == "Абонемент") && (f_921c.ToLower().Contains("дп")))
+            {
+                access = "Проследовать в указанный зал для получения на дом";
+                AddField("MethodOfAccess", "На дом");
+                return access;
+            }
+            if (f_899x.ToLower().Contains("э"))
+            {
+                access = "Данная книга включена в список экстремистской литературы, утвержденным Минюстом РФ (<a href=\"http://minjust.ru/ru\">http://minjust.ru/ru</a>). Выдаче не подлежит";
+                return access;
+            }
+            if (this.Fund == "BJSCC")
+            {
+                access = "Проследовать в указанный зал для получения и чтения внутри помещения";
+                return access;
+            }
+            if ((f_899b != "Абонемент") && (f_921c == "Для выдачи"))//надо определить что коллекция, что фонд, а что на дом.
+            {
+                access = "Заказать через личный кабинет в зал библиотеки";
+                AddField("MethodOfAccess", "В помещении библиотеки");
+                return access;
+            }
+            if (f_921c == "ДП")
+            {
+                access = "Проследовать в указанный зал для получения и чтения внутри помещения";
+                return access;
+            }
+            if (f_921c != "ДП")
+            {
+                access = "Невозможно определить. Уточнить возможность выдачи в указанном зале.";
+                return access;
+            }
+
+
+
+       
+            return "Невозможно определить.";
+        }
+
         public override void ExportCovers()
         {
             StringBuilder sb = new StringBuilder();
+            //sb.Append("select distinct IDMAIN from "+this.Fund+"..IMAGES where IDMAO");
             sb.Append("select IDMAIN from "+this.Fund+"..IMAGES");
 
             DataTable table = ExecuteQuery(sb.ToString());
+            List<string> errors = new List<string>();
             foreach (DataRow row in table.Rows)
             {
                 sb.Length = 0;
-                sb.AppendFormat("select PIC from " + this.Fund + "..IMAGES where IDMAIN = {0}", row["IDMAIN"].ToString());
+                sb.AppendFormat("select IDMAIN, PIC from " + this.Fund + "..IMAGES where IDMAIN = {0}", row["IDMAIN"].ToString());
                 DataTable pics = ExecuteQuery(sb.ToString());
                 int i = 0;
-                //using (new NetworkConnection(_directoryPath, new NetworkCredential("BJStor01\\imgview", "Image_123Viewer")))
-                NetworkCredential theNetworkCredential = new NetworkCredential("BJStor01\\imgview", "Image_123Viewer");
-                CredentialCache theNetcache = new CredentialCache();
-                theNetcache.Add(@"\\192.168.4.30\VufindCovers", 0, "Basic", theNetworkCredential);
-                //then do whatever, such as getting a list of folders:
-                string[] theFolders = System.IO.Directory.GetDirectories(@"\\192.168.4.30\VufindCovers");
-
                 foreach (DataRow pic in pics.Rows)
                 {
                     byte[] p = (byte[])pic["PIC"];
@@ -847,10 +891,28 @@ namespace ExportBJ_XML.classes
                     {
                         Directory.CreateDirectory(path);
                     }
-                    img.Save(path + i.ToString() + ".jpg");
+                    if (i == 0)
+                    {
+                        i++;
+                        try
+                        {
+                            img.Save(path + "cover.jpg");
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add(pic["PIC"].ToString() + " " + ex.Message + ex.InnerException);
+
+                        }
+                    }
+                    else
+                    {
+                        img.Save(path + "cover"+i++.ToString() + ".jpg");
+                    }
                 }
 
             }
+            File.WriteAllLines(@"f:\import\importErrors\" + this.Fund + "Errors.txt", errors.ToArray());
+
         }
 
         private void AddHierarchyFields(string ParentPIN, string CurrentPIN)

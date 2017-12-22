@@ -37,7 +37,7 @@ namespace ExportBJ_XML.classes
         }
 
         public abstract void Export();
-        public abstract void ExportSingleRecord(int idmain);
+        public abstract void ExportSingleRecord(string idRecord);
         public abstract void ExportCovers();
 
         protected virtual void OnRecordExported(EventArgs e)

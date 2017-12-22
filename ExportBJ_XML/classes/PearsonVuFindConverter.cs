@@ -6,6 +6,8 @@ using System.Xml;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using System.Xml.Linq;
+using System.Net;
 
 namespace ExportBJ_XML.classes
 {
@@ -26,7 +28,7 @@ namespace ExportBJ_XML.classes
             _objXmlWriter.WriteStartElement("add");
             _doc = _exportDocument.CreateElement("doc");
 
-            string Pearson = File.ReadAllText(@"f:/pearson.json");
+            string Pearson = File.ReadAllText(@"f:/pearson_source.json");
 
             JArray desPearson = (JArray)JsonConvert.DeserializeObject(Pearson);
 
@@ -74,13 +76,15 @@ namespace ExportBJ_XML.classes
                 writer.WriteValue("Да");
                 writer.WritePropertyName("exemplar_id");
                 writer.WriteValue("ebook");
+                writer.WritePropertyName("exemplar_location");
+                writer.WriteValue("Интернет");
 
                 writer.WriteEndObject();
                 writer.WriteEndObject();
 
 
                 AddField("MethodOfAccess", "Удалённый доступ");
-                AddField("Location", "internet");
+                AddField("Location", "Интернет");
                 AddField("Exemplar", sb.ToString());
                 AddField("id", "Pearson_" + token["id"].ToString());
                 AddField("HyperLink", "https://ebooks.libfl.ru/product/" + token["id"].ToString() );
@@ -101,13 +105,71 @@ namespace ExportBJ_XML.classes
             _objXmlWriter.Close();
         }
 
-        public override void ExportSingleRecord(int idmain)
+        public override void ExportSingleRecord(string idmain)
         {
             throw new NotImplementedException();
         }
         public override void ExportCovers()
         {
-            throw new NotImplementedException();
+
+            string Pearson = File.ReadAllText(@"f:/pearson_source.json");
+
+            JArray desPearson = (JArray)JsonConvert.DeserializeObject(Pearson);
+
+            foreach (JToken token in desPearson)
+            {
+                Uri uri = new Uri("https://storage.aggregion.com/api/files/" + token["catalog"]["cover"].ToString() + "/shared/data");
+                string str = uri.ToString();
+                Extensions.DownloadRemoteImageFile(uri.ToString(), @"f:\import\covers\pearson\" + token["id"].ToString()+@"\cover.jpg", @"f:\import\covers\pearson\" + token["id"].ToString());
+
+                VuFindConverterEventArgs e = new VuFindConverterEventArgs();
+                e.RecordId = "pearson_"+token["id"].ToString();
+                OnRecordExported(e);
+
+                GC.Collect();
+            }
+
+
+
+        }
+        public class Item
+        {
+            public string ResourceId;
+            
+        }
+        public void GetPearsonSourceData()
+        {
+
+            Uri apiUrl =
+            new Uri("http://market.aggregion.com/api/public/goods?filter=licensePackage(\"59401a585e737d0a2cb05d4e\",equals)&extend=catalog");
+
+            HttpWebRequest request = HttpWebRequest.Create(apiUrl) as HttpWebRequest;
+            request.Timeout = 120000000;
+            request.KeepAlive = true;
+            request.ProtocolVersion = HttpVersion.Version10;
+            request.ServicePoint.ConnectionLimit = 24;
+
+            HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+
+
+            //StreamReader sr = new StreamReader(response.GetResponseStream());
+            //string dwn = sr.ReadToEnd();
+
+            //читать простым текстом по частям
+            using (StreamWriter output = new StreamWriter(@"f:\pearson_source.json"))
+            {
+                using (StreamReader input = new StreamReader(response.GetResponseStream()))
+                {
+                    
+                    //byte[] buffer = new byte[8192];
+                    //int bytesRead;
+                    while ( !input.EndOfStream )
+                    {
+                        output.WriteLine(input.ReadLine());
+                    }
+                }
+            }
+
         }
 
     }

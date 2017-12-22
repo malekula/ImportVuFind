@@ -35,7 +35,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.button3 = new System.Windows.Forms.Button();
+            this.exportSingleRecord = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.btnbjvvv = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
@@ -49,11 +49,24 @@
             this.btnLitres = new System.Windows.Forms.Button();
             this.bjvvvCovers = new System.Windows.Forms.Button();
             this.litresCovers = new System.Windows.Forms.Button();
+            this.allCovers = new System.Windows.Forms.Button();
+            this.redkostjCovers = new System.Windows.Forms.Button();
+            this.brit_sovetCovers = new System.Windows.Forms.Button();
+            this.bjaccCovers = new System.Windows.Forms.Button();
+            this.bjfccCovers = new System.Windows.Forms.Button();
+            this.bjsccCovers = new System.Windows.Forms.Button();
+            this.periodCovers = new System.Windows.Forms.Button();
+            this.pearsonCovers = new System.Windows.Forms.Button();
+            this.getLitresSource = new System.Windows.Forms.Button();
+            this.getPearsonSource = new System.Windows.Forms.Button();
+            this.txtSingleRecordId = new System.Windows.Forms.TextBox();
+            this.btnJBH = new System.Windows.Forms.Button();
+            this.btnGetJBHSource = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // all
             // 
-            this.all.Location = new System.Drawing.Point(12, 334);
+            this.all.Location = new System.Drawing.Point(12, 366);
             this.all.Name = "all";
             this.all.Size = new System.Drawing.Size(75, 23);
             this.all.TabIndex = 0;
@@ -63,7 +76,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(362, 415);
+            this.button2.Location = new System.Drawing.Point(217, 459);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 1;
@@ -107,15 +120,15 @@
             this.label4.TabIndex = 5;
             this.label4.Text = "label4";
             // 
-            // button3
+            // exportSingleRecord
             // 
-            this.button3.Location = new System.Drawing.Point(479, 415);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 6;
-            this.button3.Text = "button3";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.exportSingleRecord.Location = new System.Drawing.Point(445, 395);
+            this.exportSingleRecord.Name = "exportSingleRecord";
+            this.exportSingleRecord.Size = new System.Drawing.Size(109, 23);
+            this.exportSingleRecord.TabIndex = 6;
+            this.exportSingleRecord.Text = "exportSingleRecord";
+            this.exportSingleRecord.UseVisualStyleBackColor = true;
+            this.exportSingleRecord.Click += new System.EventHandler(this.exportSingleRecord_Click);
             // 
             // timer1
             // 
@@ -223,9 +236,9 @@
             // 
             // bjvvvCovers
             // 
-            this.bjvvvCovers.Location = new System.Drawing.Point(569, 33);
+            this.bjvvvCovers.Location = new System.Drawing.Point(580, 38);
             this.bjvvvCovers.Name = "bjvvvCovers";
-            this.bjvvvCovers.Size = new System.Drawing.Size(75, 23);
+            this.bjvvvCovers.Size = new System.Drawing.Size(86, 23);
             this.bjvvvCovers.TabIndex = 11;
             this.bjvvvCovers.Text = "bjvvvCovers";
             this.bjvvvCovers.UseVisualStyleBackColor = true;
@@ -233,19 +246,153 @@
             // 
             // litresCovers
             // 
-            this.litresCovers.Location = new System.Drawing.Point(569, 62);
+            this.litresCovers.Location = new System.Drawing.Point(580, 265);
             this.litresCovers.Name = "litresCovers";
-            this.litresCovers.Size = new System.Drawing.Size(75, 23);
+            this.litresCovers.Size = new System.Drawing.Size(86, 23);
             this.litresCovers.TabIndex = 11;
             this.litresCovers.Text = "litresCovers";
             this.litresCovers.UseVisualStyleBackColor = true;
             this.litresCovers.Click += new System.EventHandler(this.litresCovers_Click);
             // 
+            // allCovers
+            // 
+            this.allCovers.Location = new System.Drawing.Point(580, 356);
+            this.allCovers.Name = "allCovers";
+            this.allCovers.Size = new System.Drawing.Size(75, 23);
+            this.allCovers.TabIndex = 12;
+            this.allCovers.Text = "all Covers";
+            this.allCovers.UseVisualStyleBackColor = true;
+            this.allCovers.Click += new System.EventHandler(this.allCovers_Click);
+            // 
+            // redkostjCovers
+            // 
+            this.redkostjCovers.Location = new System.Drawing.Point(580, 67);
+            this.redkostjCovers.Name = "redkostjCovers";
+            this.redkostjCovers.Size = new System.Drawing.Size(86, 23);
+            this.redkostjCovers.TabIndex = 13;
+            this.redkostjCovers.Text = "redkostjCovers";
+            this.redkostjCovers.UseVisualStyleBackColor = true;
+            // 
+            // brit_sovetCovers
+            // 
+            this.brit_sovetCovers.Location = new System.Drawing.Point(580, 96);
+            this.brit_sovetCovers.Name = "brit_sovetCovers";
+            this.brit_sovetCovers.Size = new System.Drawing.Size(86, 23);
+            this.brit_sovetCovers.TabIndex = 13;
+            this.brit_sovetCovers.Text = "brit_sovetCovers";
+            this.brit_sovetCovers.UseVisualStyleBackColor = true;
+            // 
+            // bjaccCovers
+            // 
+            this.bjaccCovers.Location = new System.Drawing.Point(580, 125);
+            this.bjaccCovers.Name = "bjaccCovers";
+            this.bjaccCovers.Size = new System.Drawing.Size(86, 23);
+            this.bjaccCovers.TabIndex = 13;
+            this.bjaccCovers.Text = "bjaccCovers";
+            this.bjaccCovers.UseVisualStyleBackColor = true;
+            // 
+            // bjfccCovers
+            // 
+            this.bjfccCovers.Location = new System.Drawing.Point(580, 154);
+            this.bjfccCovers.Name = "bjfccCovers";
+            this.bjfccCovers.Size = new System.Drawing.Size(86, 23);
+            this.bjfccCovers.TabIndex = 13;
+            this.bjfccCovers.Text = "bjfccCovers";
+            this.bjfccCovers.UseVisualStyleBackColor = true;
+            // 
+            // bjsccCovers
+            // 
+            this.bjsccCovers.Location = new System.Drawing.Point(580, 183);
+            this.bjsccCovers.Name = "bjsccCovers";
+            this.bjsccCovers.Size = new System.Drawing.Size(86, 23);
+            this.bjsccCovers.TabIndex = 13;
+            this.bjsccCovers.Text = "bjsccCovers";
+            this.bjsccCovers.UseVisualStyleBackColor = true;
+            // 
+            // periodCovers
+            // 
+            this.periodCovers.Location = new System.Drawing.Point(580, 212);
+            this.periodCovers.Name = "periodCovers";
+            this.periodCovers.Size = new System.Drawing.Size(86, 23);
+            this.periodCovers.TabIndex = 13;
+            this.periodCovers.Text = "periodCovers";
+            this.periodCovers.UseVisualStyleBackColor = true;
+            // 
+            // pearsonCovers
+            // 
+            this.pearsonCovers.Location = new System.Drawing.Point(580, 236);
+            this.pearsonCovers.Name = "pearsonCovers";
+            this.pearsonCovers.Size = new System.Drawing.Size(86, 23);
+            this.pearsonCovers.TabIndex = 13;
+            this.pearsonCovers.Text = "pearsonCovers";
+            this.pearsonCovers.UseVisualStyleBackColor = true;
+            this.pearsonCovers.Click += new System.EventHandler(this.pearsonCovers_Click);
+            // 
+            // getLitresSource
+            // 
+            this.getLitresSource.Location = new System.Drawing.Point(12, 468);
+            this.getLitresSource.Name = "getLitresSource";
+            this.getLitresSource.Size = new System.Drawing.Size(111, 23);
+            this.getLitresSource.TabIndex = 14;
+            this.getLitresSource.Text = "getLitresSource";
+            this.getLitresSource.UseVisualStyleBackColor = true;
+            this.getLitresSource.Click += new System.EventHandler(this.getLitresSource_Click);
+            // 
+            // getPearsonSource
+            // 
+            this.getPearsonSource.Location = new System.Drawing.Point(12, 497);
+            this.getPearsonSource.Name = "getPearsonSource";
+            this.getPearsonSource.Size = new System.Drawing.Size(111, 23);
+            this.getPearsonSource.TabIndex = 14;
+            this.getPearsonSource.Text = "getPearsonSource";
+            this.getPearsonSource.UseVisualStyleBackColor = true;
+            this.getPearsonSource.Click += new System.EventHandler(this.getPearsonSource_Click);
+            // 
+            // txtSingleRecordId
+            // 
+            this.txtSingleRecordId.Location = new System.Drawing.Point(124, 395);
+            this.txtSingleRecordId.Name = "txtSingleRecordId";
+            this.txtSingleRecordId.Size = new System.Drawing.Size(301, 20);
+            this.txtSingleRecordId.TabIndex = 15;
+            // 
+            // btnJBH
+            // 
+            this.btnJBH.Location = new System.Drawing.Point(12, 294);
+            this.btnJBH.Name = "btnJBH";
+            this.btnJBH.Size = new System.Drawing.Size(75, 23);
+            this.btnJBH.TabIndex = 16;
+            this.btnJBH.Text = "jbh";
+            this.btnJBH.UseVisualStyleBackColor = true;
+            this.btnJBH.Click += new System.EventHandler(this.btnJBH_Click);
+            // 
+            // btnGetJBHSource
+            // 
+            this.btnGetJBHSource.Location = new System.Drawing.Point(12, 439);
+            this.btnGetJBHSource.Name = "btnGetJBHSource";
+            this.btnGetJBHSource.Size = new System.Drawing.Size(111, 23);
+            this.btnGetJBHSource.TabIndex = 17;
+            this.btnGetJBHSource.Text = "getJBHSource";
+            this.btnGetJBHSource.UseVisualStyleBackColor = true;
+            this.btnGetJBHSource.Click += new System.EventHandler(this.btnGetJBHSource_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(693, 450);
+            this.ClientSize = new System.Drawing.Size(693, 524);
+            this.Controls.Add(this.btnGetJBHSource);
+            this.Controls.Add(this.btnJBH);
+            this.Controls.Add(this.txtSingleRecordId);
+            this.Controls.Add(this.getPearsonSource);
+            this.Controls.Add(this.getLitresSource);
+            this.Controls.Add(this.pearsonCovers);
+            this.Controls.Add(this.periodCovers);
+            this.Controls.Add(this.bjsccCovers);
+            this.Controls.Add(this.bjfccCovers);
+            this.Controls.Add(this.bjaccCovers);
+            this.Controls.Add(this.brit_sovetCovers);
+            this.Controls.Add(this.redkostjCovers);
+            this.Controls.Add(this.allCovers);
             this.Controls.Add(this.litresCovers);
             this.Controls.Add(this.bjvvvCovers);
             this.Controls.Add(this.btnLitres);
@@ -258,7 +405,7 @@
             this.Controls.Add(this.btnredkostj);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.btnbjvvv);
-            this.Controls.Add(this.button3);
+            this.Controls.Add(this.exportSingleRecord);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
@@ -276,7 +423,7 @@
 
         private System.Windows.Forms.Button all;
         private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button exportSingleRecord;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Button btnbjvvv;
         public System.Windows.Forms.Label label1;
@@ -294,6 +441,19 @@
         private System.Windows.Forms.Button btnLitres;
         private System.Windows.Forms.Button bjvvvCovers;
         private System.Windows.Forms.Button litresCovers;
+        private System.Windows.Forms.Button allCovers;
+        private System.Windows.Forms.Button redkostjCovers;
+        private System.Windows.Forms.Button brit_sovetCovers;
+        private System.Windows.Forms.Button bjaccCovers;
+        private System.Windows.Forms.Button bjfccCovers;
+        private System.Windows.Forms.Button bjsccCovers;
+        private System.Windows.Forms.Button periodCovers;
+        private System.Windows.Forms.Button pearsonCovers;
+        private System.Windows.Forms.Button getLitresSource;
+        private System.Windows.Forms.Button getPearsonSource;
+        private System.Windows.Forms.TextBox txtSingleRecordId;
+        private System.Windows.Forms.Button btnJBH;
+        private System.Windows.Forms.Button btnGetJBHSource;
     }
 }
 
