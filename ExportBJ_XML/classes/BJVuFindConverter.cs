@@ -128,6 +128,7 @@ namespace ExportBJ_XML.classes
             DataTable clarify;
             string query = "";
             string Annotation = "";
+            string CarrierCode = "";
             foreach (DataRow r in BJBook.Rows)
             {
 
@@ -168,7 +169,8 @@ namespace ExportBJ_XML.classes
                         AddField("author2_role", r["PLAIN"].ToString());
                         break;
                     case "921$a":
-                        AddField("format", r["PLAIN"].ToString());
+                        CarrierCode = GetCarrierCode(r["PLAIN"].ToString());
+                        AddField("format", CarrierCode);
                         break;
                     case "922$e":
                         AddField("genre", r["PLAIN"].ToString());
@@ -442,7 +444,7 @@ namespace ExportBJ_XML.classes
                         break;
                     case "940$a":
                         AddField("HyperLink", r["PLAIN"].ToString());
-                        AddField("MethodOfAccess", "Удалённый доступ");
+                        //AddField("MethodOfAccess", "4002");
                         break;
                     case "606$a"://"""""" • """"""
                         query = "select * " +
@@ -489,7 +491,7 @@ namespace ExportBJ_XML.classes
             }
             AddField("id", this.Fund + "_" + currentIDMAIN);
 
-            string rusFund = GetRusFund(this.Fund);
+            string rusFund = GetFundId(this.Fund);
 
             AddField("fund", rusFund);
             AddField("allfields", allFields);
@@ -554,8 +556,10 @@ namespace ExportBJ_XML.classes
             string f_899a = "";
             string f_899p = "";
             string f_899x = "";
+            string f_921a = "";
             string f_921c = "";
-
+            string f_921d = "";
+            string CarrierCode = "";
             foreach (DataRow iddata in table.Rows)
             {
                 query = " select * from " + fund + "..DATAEXT A" +
@@ -573,10 +577,11 @@ namespace ExportBJ_XML.classes
                     switch (code)
                     {
                         case "899$a":
-                            string UnifiedLocation = GetUnifiedLocation(r["PLAIN"].ToString());
+                            KeyValuePair<int, string> UnifiedLocation = GetUnifiedLocation(r["PLAIN"].ToString());
                             writer.WritePropertyName("exemplar_location");
-                            writer.WriteValue(UnifiedLocation);
-                            AddField("Location", UnifiedLocation);
+                            string LocationCode = UnifiedLocation.Key.ToString();
+                            writer.WriteValue(UnifiedLocation.Key);
+                            AddField("Location", UnifiedLocation.Key.ToString());
                             f_899a = r["PLAIN"].ToString();
                             break;
                         case "482$a":
@@ -632,13 +637,20 @@ namespace ExportBJ_XML.classes
                         case "921$a":
                             //Exemplar += "Носитель:" + r["PLAIN"].ToString() + "#";
                             writer.WritePropertyName("exemplar_carrier");
-                            writer.WriteValue(r["PLAIN"].ToString());
+                            CarrierCode = GetCarrierCode(r["PLAIN"].ToString());
+                            writer.WriteValue(CarrierCode);
+                            f_921a = r["PLAIN"].ToString(); 
                             break;
                         case "921$c":
                             //Exemplar += "Класс издания:" + r["PLAIN"].ToString() + "#";
                             writer.WritePropertyName("exemplar_class_edition");
                             writer.WriteValue(r["PLAIN"].ToString());
                             f_921c = r["PLAIN"].ToString();
+                            break;
+                        case "921$d":
+                            //writer.WritePropertyName("exemplar_class_edition");
+                            //writer.WriteValue(r["PLAIN"].ToString());
+                            f_921d = r["PLAIN"].ToString();
                             break;
                         //case "922$b":
                             //Exemplar += "Трофей\\Принадлежность к:" + r["PLAIN"].ToString() + "#";
@@ -737,7 +749,7 @@ namespace ExportBJ_XML.classes
                 writer.WritePropertyName("exemplar_id");
                 writer.WriteValue(iddata["IDDATA"].ToString());
 
-                string exemplar_access = GetExemplarAccess(f_899a, f_899b, f_899p, f_921c, f_899x);
+                string exemplar_access = GetExemplarAccess(f_899a, f_899b, f_899p, f_921c, f_899x, f_921d, f_921a);
 
                 writer.WritePropertyName("exemplar_access");
                 writer.WriteValue(exemplar_access);
@@ -790,19 +802,21 @@ namespace ExportBJ_XML.classes
                     writer.WritePropertyName("exemplar_access");
                     writer.WriteValue(
                         (ForAllReader) ?
-                        "Для прочтения онлайн необходимо перейти по ссылке" :
-                        "Для прочтения онлайн необходимо положить в корзину и заказать через личный кабинет");
+                        "1001" : "1002");
+                        //"Для прочтения онлайн необходимо перейти по ссылке" :
+                        //"Для прочтения онлайн необходимо положить в корзину и заказать через личный кабинет");
                     writer.WritePropertyName("exemplar_carrier");
-                    writer.WriteValue("Электронная книга");
+                    //writer.WriteValue("Электронная книга");
+                    writer.WriteValue("3011");
 
                     writer.WritePropertyName("exemplar_id");
                     writer.WriteValue("ebook");//для всех у кого есть электронная копия. АПИ когда это значение встретит, сразу вернёт "доступно"
                     writer.WritePropertyName("exemplar_location");
-                    writer.WriteValue("Интернет");
+                    writer.WriteValue("2024");
 
                 }
                 writer.WriteEndObject();
-                AddField("MethodOfAccess", "Удалённый доступ");
+                AddField("MethodOfAccess", "4002");
 
                 //определить структуру, в которую полностью запись ложится и здесь её проверять, чтобы правильно вычисляемые поля проставить.
             }
@@ -813,58 +827,391 @@ namespace ExportBJ_XML.classes
             AddField("Exemplar", sb.ToString());
         }
 
-        private string GetExemplarAccess(string f_899a, string f_899b, string f_899p, string f_921c, string f_899x)
+        //private string GetLocationCode(string location)
+        //{
+        //    string result = location;
+
+        //    switch (location)
+        //    {
+        //        case "ЦМС Академия Рудомино":
+        //            result = "2000";
+        //            break;
+        //        case "…Выст… КОО Группа справочного-информационного обслуживания":
+        //            result = "2001";
+        //            break;
+        //        case "…ЗалФ… Отдел детской книги и детских программ":
+        //            result = "2003";
+        //            break;
+        //        case "ЦМС ОР Дом еврейской книги":
+        //            result = "Дом еврейской книги 3 этаж";
+        //            break;
+        //        case "…Зал… КОО Группа абонементного обслуживания":
+        //            result = "Зал абонементного обслуживания 2 этаж";
+        //            break;
+        //        case "…Зал… КОО Группа выдачи документов":
+        //            result = "Зал выдачи документов 2 этаж";
+        //            break;
+        //        case "…Зал… КНИО Группа искусствоведения":
+        //            result = "Зал искусствоведения 4 этаж";
+        //            break;
+        //        case "…Зал… КНИО Группа редкой книги":
+        //            result = "Зал редкой книги 4 этаж";
+        //            break;
+        //        case "…ЗалФ… КНИО Группа религоведения":
+        //            result = "Зал религиоведения 4 этаж";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - 0 этаж":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - 2 этаж":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - 3 этаж":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - 4 этаж":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - 5 этаж":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - 6 этаж":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - 7 этаж":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - Абонемент":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - Новая периодика":
+        //            result = "Книгохранение";
+        //            break;
+        //        case "…Хран… КНИО Группа хранения редкой книги":
+        //            result = "Книгохранение редкой книги";
+        //            break;
+        //        case "Книжный клуб":
+        //            result = "Книжный клуб 1 этаж";
+        //            break;
+        //        case "…ЗалФ… ЦМС ОР Культурный центр Франкотека":
+        //            result = "Культурный центр \"Франкотека\" 2 этаж";
+        //            break;
+        //        case "…ЗалФ… ЦМС ОР Лингвистический ресурсный центр Pearson":
+        //            result = "Лингвистический ресурсный центр Pearson 3 этаж";
+        //            break;
+        //        case "КНИО - Комплексный научно-исследовательский отдел":
+        //            result = "Научно-исследовательский отдел";
+        //            break;
+        //        case "…Обраб… КО КОД Сектор ОД - Группа инвентаризации":
+        //            result = "Обработка в группе инвентаризации";
+        //            break;
+        //        case "…Обраб… КО КОД Сектор ОД - Группа каталогизации":
+        //            result = "Обработка в группе каталогизации";
+        //            break;
+        //        case "…Обраб… КО ХКРФ Сектор микрофильмирования":
+        //            result = "Обработка в группе микрофильмирования";
+        //            break;
+        //        case "…Обраб… ЦИИТ Группа оцифровки":
+        //            result = "Обработка в группе оцифровки";
+        //            break;
+        //        case "…Обраб… КО КОД Сектор ОД - Группа систематизации":
+        //            result = "Обработка в группе систематизации";
+        //            break;
+        //        case "…Обраб… КО КОД Сектор комплектования":
+        //            result = "Обработка в секторе комплектования";
+        //            break;
+        //        case "…Обраб… КО ХКРФ Сектор научной реставрации":
+        //            result = "Обработка в секторе научной реставрации";
+        //            break;
+        //        case "…Хран… Сектор книгохранения - Овальный зал":
+        //            result = "Овальный зал";
+        //            break;
+        //        case "КО КОД - Комплексный отдел комплектования и обработки документов":
+        //            result = "Отдел комплектования";
+        //            break;
+        //        case "КОО - Комплексный отдел обслуживания":
+        //            result = "Отдел обслуживания";
+        //            break;
+        //        case "КОО Группа регистрации":
+        //            result = "Отдел обслуживания";
+        //            break;
+        //        case "КО ХКРФ - Комплексный отдел хранения, консервации и реставрации фондов":
+        //            result = "Отдел хранения и реставрации";
+        //            break;
+        //        case "ЦКПП Редакционно-издательский отдел":
+        //            result = "Редакционно-издательский отдел";
+        //            break;
+        //        case "КО ХКРФ Сектор книгохранения":
+        //            result = "Сектор книгохранения";
+        //            break;
+        //        case "КО КОД Сектор ОД":
+        //            result = "Сектор обработки документов";
+        //            break;
+        //        case "…Хран… ЦИИТ Сервера библиотеки":
+        //            result = "Сервера библиотеки";
+        //            break;
+        //        case "Д Бухгалтерия":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д Группа экспедиторского обслуживания":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д Контрактная служба":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д Отдел PR и редакция сайта":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д Отдел безопасности":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д Отдел внутреннего финансового контроля":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д Отдел по работе с персоналом":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д Отдел финансового планирования и сводной отчетности":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д УЭ - Управление по эксплуатации объектов недвижимости и обеспечения деятельности":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д УЭ Служба материально-технического обеспечения":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д УЭ Служба управления инженерными системами":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "Д УЭ Служба эксплуатации зданий и благоустройства":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "ЦБИД - Центр библиотечно-информационной деятельности и поддержки чтения":
+        //            result = "Служебные подразделения";
+        //            break;
+        //        case "…ЗалФ… ЦМС ОР Центр американской культуры":
+        //            result = "Центр американской культуры 3 этаж";
+        //            break;
+        //        case "ЦИИТ - Центр инновационных информационных технологий":
+        //            result = "Центр инновационных информационных технологий";
+        //            break;
+        //        case "ЦИИТ Группа IT":
+        //            result = "Центр инновационных информационных технологий";
+        //            break;
+        //        case "ЦИИТ Группа автоматизации":
+        //            result = "Центр инновационных информационных технологий";
+        //            break;
+        //        case "ЦИИТ Группа развития":
+        //            result = "Центр инновационных информационных технологий";
+        //            break;
+        //        case "ЦКПП - Центр культурно-просветительских программ":
+        //            result = "Центр культурно-просветительских программ";
+        //            break;
+        //        case "ЦМС - Центр международного сотрудничества":
+        //            result = "Центр международного сотрудничества";
+        //            break;
+        //        case "ЦМС ОР - Отдел развития":
+        //            result = "Центр международного сотрудничества";
+        //            break;
+        //        case "ЦМС ОР Отдел японской культуры":
+        //            result = "Центр международного сотрудничества";
+        //            break;
+        //        case "ЦМС Отдел международного протокола":
+        //            result = "Центр международного сотрудничества";
+        //            break;
+        //        case "ЦМРС - Центр межрегионального сотрудничества":
+        //            result = "Центр межрегионального сотрудничества";
+        //            break;
+        //        case "…ЗалФ… ЦМС ОР Центр славянских культур":
+        //            result = "Центр славянских культур 4 этаж";
+        //            break;
+        //        case "…Зал… КОО Группа читального зала 3 этаж":
+        //            result = "Читальный зал 3 этаж";
+        //            break;
+        //        case "…Зал… КОО Группа электронного зала 2 этаж":
+        //            result = "Электронный зал 2 этаж";
+        //            break;
+        //        case "American cultural center":
+        //            result = "Центр американской культуры 3 этаж";
+        //            break;
+        //        case "American cultural center(!)":
+        //            result = "Центр американской культуры 3 этаж";
+        //            break;
+        //        case "Выездная библиотека":
+        //            result = "Центр американской культуры 3 этаж";
+        //            break;
+        //        case "Франкотека":
+        //            result = "Культурный центр \"Франкотека\" 2 этаж";
+        //            break;
+        //        case "Francothèque":
+        //            result = "Культурный центр \"Франкотека\" 2 этаж";
+        //            break;
+        //        case "Центр славянских культур":
+        //            result = "Центр славянских культур 4 этаж";
+        //            break;
+        //        case "КО автоматизации":
+        //            result = "Центр инновационных информационных технологий";
+        //            break;
+        //        case "КО комплектования и ОД. Сектор комплектования – группа регистрации":
+        //            result = "Отдел комплектования";
+        //            break;
+        //        case "КО обслуживания – зал абонементного обслуживания":
+        //            result = "Зал абонементного обслуживания 2 этаж";
+        //            break;
+        //        case "Сектор научной реставрации":
+        //            result = "Отдел хранения и реставрации";
+        //            break;
+        //        default:
+        //            result = "нет данных";
+        //            break;
+        //    }
+
+        //    return result;
+        //}
+
+        private string GetCarrierCode(string CarrierName)
+        {
+            switch (CarrierName)
+            {
+                case "Аудиокассета":
+                    return "3000";
+                case "Бумага":
+                    return "3001";
+                case "Видеокассета":
+                    return "3002";
+                case "Грампластинка":
+                    return "3003";
+                case "Дискета":
+                    return "3004";
+                case "Комплект(бумага+)":
+                    return "3005";
+                case "Магнитная лента":
+                    return "3006";
+                case "Микрофильм":
+                    return "3007";
+                case "Микрофиша":
+                    return "3008";
+                case "СD/DVD":
+                    return "3009";
+                case "Слайд":
+                    return "3010";
+                case "Электронная копия":
+                    return "3011";
+                case "Электронное издание":
+                    return "3012";
+            }
+            return "3001";
+        }
+
+        private string GetExemplarAccess(string f_899a, string f_899b, string f_899p, string f_921c, string f_899x, string f_921d, string f_921a)
         {
             string access = "";
-            if ((this.Fund == "BJFCC") || (this.Fund == "BJACC") || (this.Fund == "BRIT_SOVET"))
-            {
-                access = "Проследовать в указанный зал для получения на дом";
-                return access;
-            }
-
-            if ((f_899b.ToLower() == "абонемент") && (f_899a.ToLower().Contains("книгохранен")))
-            {
-                access = "Заказать через личный кабинет на дом";
-                AddField("MethodOfAccess", "На дом");
-                return access;
-            }
-            if ((f_899b == "Абонемент") && (f_921c.ToLower().Contains("дп")))
-            {
-                access = "Проследовать в указанный зал для получения на дом";
-                AddField("MethodOfAccess", "На дом");
-                return access;
-            }
             if (f_899x.ToLower().Contains("э"))
             {
-                access = "Данная книга включена в список экстремистской литературы, утвержденным Минюстом РФ (<a href=\"http://minjust.ru/ru\">http://minjust.ru/ru</a>). Выдаче не подлежит";
+                //access = "Данная книга включена в список экстремистской литературы, утвержденным Минюстом РФ (<a href=\"http://minjust.ru/ru\">http://minjust.ru/ru</a>). Выдаче не подлежит";
+                access = "1999";
+                AddField("MethodOfAccess", "4005");
                 return access;
             }
-            if (this.Fund == "BJSCC")
+            if (f_921d == "Эл. свободный доступ")
             {
-                access = "Проследовать в указанный зал для получения и чтения внутри помещения";
+                access = "1001";
+                AddField("MethodOfAccess", "4002");
                 return access;
             }
-            if ((f_899b != "Абонемент") && (f_921c == "Для выдачи"))//надо определить что коллекция, что фонд, а что на дом.
+            if (f_921d == "Эл. через личный кабинет")
             {
-                access = "Заказать через личный кабинет в зал библиотеки";
-                AddField("MethodOfAccess", "В помещении библиотеки");
+                access = "1002";
+                AddField("MethodOfAccess", "4002");
                 return access;
             }
-            if (f_921c == "ДП")
+            if (f_921d == "Эл. только в библиотеке")
             {
-                access = "Проследовать в указанный зал для получения и чтения внутри помещения";
+                access = "1003";
+                AddField("MethodOfAccess", "4003");
                 return access;
             }
-            if (f_921c != "ДП")
+            
+            if ((f_899b == "Абонемент") && (f_899a.ToLower().Contains("абонемент")))
             {
-                access = "Невозможно определить. Уточнить возможность выдачи в указанном зале.";
+                //access = "Проследовать в указанный зал для получения на дом";
+                access = "1006";
+                AddField("MethodOfAccess", "4001");
+                return access;
+            }
+            if ((f_899b.ToLower() == "абонемент") && (f_899a.ToLower().Contains("книгохранен")))
+            {
+                //access = "Заказать через личный кабинет на дом";
+                access = "1006";
+                AddField("MethodOfAccess", "4001");
+                return access;
+            }
+            if ((this.Fund == "BJFCC") || (this.Fund == "BJACC") || (this.Fund == "BRIT_SOVET"))
+            {
+                //access = "Проследовать в указанный зал для получения на дом";
+                access = "1006";
+                AddField("MethodOfAccess", "4001");
+                return access;
+            }
+            if ((f_899a.ToLower() == "славянс") && (f_921d.ToLower().Contains("На дом")))
+            {
+                access = "1006";
+                AddField("MethodOfAccess", "4001");
+                return access;
+            }
+            if ((f_899a.ToLower() == "славянс") && (!f_921d.ToLower().Contains("На дом")))
+            {
+                access = "1007";
+                AddField("MethodOfAccess", "4000");
+                return access;
+            }
+            if ((this.Fund == "BJACC")) // тут ещё типа проверка 921d, но по большому счёту всё на дом, да и кто будет заполнять это поле 10 тыс. раз?
+            {
+                access = "1006";
+                AddField("MethodOfAccess", "4001");
+                return access;
+            }
+            if ((this.Fund == "REDKOSTJ"))
+            {
+                access = "1007";
+                AddField("MethodOfAccess", "4000");
+                return access;
+            }
+            if ((this.Fund == "BJVVV") && (f_921c == "Для выдачи"))
+            {
+                access = "1000";
+                AddField("MethodOfAccess", "4000");
+                return access;
+            }
+            if ((this.Fund == "BJVVV") && (f_921c == "ДП"))
+            {
+                access = "1007";
+                AddField("MethodOfAccess", "4000");
+                return access;
+            }
+            if (f_921d.ToLower().Contains("только в библиотеке"))
+            {
+                access = "1003";
+                AddField("MethodOfAccess", "4003");
+                return access;
+            }
+            if ((this.Fund == "BJVVV") && (f_921c == "Выставка"))
+            {
+                access = "1011";
+                AddField("MethodOfAccess", "4000");
+                return access;
+            }
+            if ((this.Fund == "BJVVV") && ((f_899b.ToLower() == "спв") || (!f_921a.Contains("Бумага") && (!f_921a.Contains("лектронн")))))
+            {
+                access = "1012";
+                AddField("MethodOfAccess", "4000");
                 return access;
             }
 
-
-
-       
-            return "Невозможно определить.";
+            //невозможно определить
+            access = "1010";
+            AddField("MethodOfAccess", "4999");
+            return access;
         }
 
         public override void ExportCovers()
@@ -1068,242 +1415,240 @@ namespace ExportBJ_XML.classes
             return ds.Tables["t"];
         }
 
-        private string GetUnifiedLocation(string location)
+        private KeyValuePair<int, string> GetUnifiedLocation(string location)
         {
-            string result = location;
-
+            KeyValuePair<int, string> result = new KeyValuePair<int, string>();
+            //Dictionary<int, string> Locations = new Dictionary<int, string>();
+            //Locations[2000] = "SDS";
             switch (location)
             {
                 case "ЦМС Академия Рудомино":
-                    result = "Академия \"Рудомино\"";
+                    result = new KeyValuePair<int, string>(2000, "Академия \"Рудомино\"");
                     break;
                 case "…Выст… КОО Группа справочного-информационного обслуживания":
-                    result = "Выставка книг 2 этаж";
+                    result = new KeyValuePair<int, string>(2001, "Выставка книг 2 этаж");
                     break;
                 case "…ЗалФ… Отдел детской книги и детских программ":
-                    result = "Детский зал 2 этаж";
+                    result = new KeyValuePair<int, string>(2003,  "Детский зал 2 этаж"); 
                     break;
                 case "ЦМС ОР Дом еврейской книги":
-                    result = "Дом еврейской книги 3 этаж";
+                    result = new KeyValuePair<int, string>(2005,  "Дом еврейской книги 3 этаж");
                     break;
                 case "…Зал… КОО Группа абонементного обслуживания":
-                    result = "Зал абонементного обслуживания 2 этаж";
+                    result = new KeyValuePair<int, string>(2006,  "Зал абонементного обслуживания 2 этаж");
                     break;
                 case "…Зал… КОО Группа выдачи документов":
-                    result = "Зал выдачи документов 2 этаж";
+                    result = new KeyValuePair<int, string>(2007,  "Зал выдачи документов 2 этаж");
                     break;
                 case "…Зал… КНИО Группа искусствоведения":
-                    result = "Зал искусствоведения 4 этаж";
+                    result = new KeyValuePair<int, string>(2008,  "Зал искусствоведения 4 этаж");
                     break;
                 case "…Зал… КНИО Группа редкой книги":
-                    result = "Зал редкой книги 4 этаж";
+                    result = new KeyValuePair<int, string>(2009,  "Зал редкой книги 4 этаж");
                     break;
                 case "…ЗалФ… КНИО Группа религоведения":
-                    result = "Зал религиоведения 4 этаж";
+                    result = new KeyValuePair<int, string>(2010,  "Зал религиоведения 4 этаж");
                     break;
                 case "…Хран… Сектор книгохранения - 0 этаж":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011,  "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - 2 этаж":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - 3 этаж":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - 4 этаж":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - 5 этаж":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - 6 этаж":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - 7 этаж":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - Абонемент":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… Сектор книгохранения - Новая периодика":
-                    result = "Книгохранение";
+                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
                     break;
                 case "…Хран… КНИО Группа хранения редкой книги":
-                    result = "Книгохранение редкой книги";
+                    result = new KeyValuePair<int, string>(2012,  "Книгохранение редкой книги");
                     break;
                 case "Книжный клуб":
-                    result = "Книжный клуб 1 этаж";
+                    result = new KeyValuePair<int, string>(2013,  "Книжный клуб 1 этаж");
                     break;
                 case "…ЗалФ… ЦМС ОР Культурный центр Франкотека":
-                    result = "Культурный центр \"Франкотека\" 2 этаж";
+                    result = new KeyValuePair<int, string>(2014,  "Культурный центр \"Франкотека\" 2 этаж");
                     break;
                 case "…ЗалФ… ЦМС ОР Лингвистический ресурсный центр Pearson":
-                    result = "Лингвистический ресурсный центр Pearson 3 этаж";
+                    result = new KeyValuePair<int, string>(2015,  "Лингвистический ресурсный центр Pearson 3 этаж");
                     break;
                 case "КНИО - Комплексный научно-исследовательский отдел":
-                    result = "Научно-исследовательский отдел";
+                    result = new KeyValuePair<int, string>(2016,  "Научно-исследовательский отдел");
                     break;
                 case "…Обраб… КО КОД Сектор ОД - Группа инвентаризации":
-                    result = "Обработка в группе инвентаризации";
+                    result = new KeyValuePair<int, string>(2017,  "Обработка в группе инвентаризации");
                     break;
                 case "…Обраб… КО КОД Сектор ОД - Группа каталогизации":
-                    result = "Обработка в группе каталогизации";
+                    result = new KeyValuePair<int, string>(2018,  "Обработка в группе каталогизации");
                     break;
                 case "…Обраб… КО ХКРФ Сектор микрофильмирования":
-                    result = "Обработка в группе микрофильмирования";
+                    result = new KeyValuePair<int, string>(2019,  "Обработка в группе микрофильмирования");
                     break;
                 case "…Обраб… ЦИИТ Группа оцифровки":
-                    result = "Обработка в группе оцифровки";
+                    result = new KeyValuePair<int, string>(2020,  "Обработка в группе оцифровки");
                     break;
                 case "…Обраб… КО КОД Сектор ОД - Группа систематизации":
-                    result = "Обработка в группе систематизации";
+                    result = new KeyValuePair<int, string>(2021,  "Обработка в группе систематизации");
                     break;
                 case "…Обраб… КО КОД Сектор комплектования":
-                    result = "Обработка в секторе комплектования";
+                    result = new KeyValuePair<int, string>(2022,  "Обработка в секторе комплектования");
                     break;
                 case "…Обраб… КО ХКРФ Сектор научной реставрации":
-                    result = "Обработка в секторе научной реставрации";
+                    result = new KeyValuePair<int, string>(2023,  "Обработка в секторе научной реставрации");
                     break;
                 case "…Хран… Сектор книгохранения - Овальный зал":
-                    result = "Овальный зал";
+                    result = new KeyValuePair<int, string>(2024,  "Овальный зал");
                     break;
                 case "КО КОД - Комплексный отдел комплектования и обработки документов":
-                    result = "Отдел комплектования";
+                    result = new KeyValuePair<int, string>(2025,  "Отдел комплектования");
                     break;
                 case "КОО - Комплексный отдел обслуживания":
-                    result = "Отдел обслуживания";
+                    result = new KeyValuePair<int, string>(2026,  "Отдел обслуживания");
                     break;
                 case "КОО Группа регистрации":
-                    result = "Отдел обслуживания";
+                    result = new KeyValuePair<int, string>(2026,  "Отдел обслуживания");
                     break;
                 case "КО ХКРФ - Комплексный отдел хранения, консервации и реставрации фондов":
-                    result = "Отдел хранения и реставрации";
+                    result = new KeyValuePair<int, string>(2027,  "Отдел хранения и реставрации");
                     break;
                 case "ЦКПП Редакционно-издательский отдел":
-                    result = "Редакционно-издательский отдел";
+                    result = new KeyValuePair<int, string>(2028,  "Редакционно-издательский отдел");
                     break;
                 case "КО ХКРФ Сектор книгохранения":
-                    result = "Сектор книгохранения";
+                    result = new KeyValuePair<int, string>(2011,  "Сектор книгохранения");
                     break;
                 case "КО КОД Сектор ОД":
-                    result = "Сектор обработки документов";
+                    result = new KeyValuePair<int, string>(2029,  "Сектор обработки документов");
                     break;
                 case "…Хран… ЦИИТ Сервера библиотеки":
-                    result = "Сервера библиотеки";
+                    result = new KeyValuePair<int, string>(2030,  "Сервера библиотеки");
                     break;
                 case "Д Бухгалтерия":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031,  "Служебные подразделения");
                     break;
                 case "Д Группа экспедиторского обслуживания":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д Контрактная служба":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д Отдел PR и редакция сайта":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д Отдел безопасности":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д Отдел внутреннего финансового контроля":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д Отдел по работе с персоналом":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д Отдел финансового планирования и сводной отчетности":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д УЭ - Управление по эксплуатации объектов недвижимости и обеспечения деятельности":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д УЭ Служба материально-технического обеспечения":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д УЭ Служба управления инженерными системами":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "Д УЭ Служба эксплуатации зданий и благоустройства":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "ЦБИД - Центр библиотечно-информационной деятельности и поддержки чтения":
-                    result = "Служебные подразделения";
+                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
                     break;
                 case "…ЗалФ… ЦМС ОР Центр американской культуры":
-                    result = "Центр американской культуры 3 этаж";
+                    result = new KeyValuePair<int, string>(2032,  "Центр американской культуры 3 этаж");
                     break;
                 case "ЦИИТ - Центр инновационных информационных технологий":
-                    result = "Центр инновационных информационных технологий";
+                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
                     break;
                 case "ЦИИТ Группа IT":
-                    result = "Центр инновационных информационных технологий";
+                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
                     break;
                 case "ЦИИТ Группа автоматизации":
-                    result = "Центр инновационных информационных технологий";
+                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
                     break;
                 case "ЦИИТ Группа развития":
-                    result = "Центр инновационных информационных технологий";
+                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
                     break;
                 case "ЦКПП - Центр культурно-просветительских программ":
-                    result = "Центр культурно-просветительских программ";
+                    result = new KeyValuePair<int, string>(2034,  "Центр культурно-просветительских программ");
                     break;
                 case "ЦМС - Центр международного сотрудничества":
-                    result = "Центр международного сотрудничества";
+                    result = new KeyValuePair<int, string>(2035,  "Центр международного сотрудничества");
                     break;
                 case "ЦМС ОР - Отдел развития":
-                    result = "Центр международного сотрудничества";
+                    result = new KeyValuePair<int, string>(2035, "Центр международного сотрудничества");
                     break;
                 case "ЦМС ОР Отдел японской культуры":
-                    result = "Центр международного сотрудничества";
+                    result = new KeyValuePair<int, string>(2035, "Центр международного сотрудничества");
                     break;
                 case "ЦМС Отдел международного протокола":
-                    result = "Центр международного сотрудничества";
+                    result = new KeyValuePair<int, string>(2035, "Центр международного сотрудничества");
                     break;
                 case "ЦМРС - Центр межрегионального сотрудничества":
-                    result = "Центр межрегионального сотрудничества";
+                    result = new KeyValuePair<int, string>(2035, "Центр межрегионального сотрудничества");
                     break;
                 case "…ЗалФ… ЦМС ОР Центр славянских культур":
-                    result = "Центр славянских культур 4 этаж";
+                    result = new KeyValuePair<int, string>(2036,  "Центр славянских культур 4 этаж");
                     break;
                 case "…Зал… КОО Группа читального зала 3 этаж":
-                    result = "Читальный зал 3 этаж";
+                    result = new KeyValuePair<int, string>(2037,  "Читальный зал 3 этаж");
                     break;
                 case "…Зал… КОО Группа электронного зала 2 этаж":
-                    result = "Электронный зал 2 этаж";
+                    result = new KeyValuePair<int, string>(2038,  "Электронный зал 2 этаж");
                     break;
                 case "American cultural center":
-                    result = "Центр американской культуры 3 этаж";
+                    result = new KeyValuePair<int, string>(2039,  "Центр американской культуры 3 этаж");
                     break;
                 case "American cultural center(!)":
-                    result = "Центр американской культуры 3 этаж";
+                    result = new KeyValuePair<int, string>(2039, "Центр американской культуры 3 этаж");
                     break;
                 case "Выездная библиотека":
-                    result = "Центр американской культуры 3 этаж";
+                    result = new KeyValuePair<int, string>(2039, "Центр американской культуры 3 этаж");
                     break;
                 case "Франкотека":
-                    result = "Культурный центр \"Франкотека\" 2 этаж";
+                    result = new KeyValuePair<int, string>(2014,  "Культурный центр \"Франкотека\" 2 этаж");
                     break;
                 case "Francothèque":
-                    result = "Культурный центр \"Франкотека\" 2 этаж";
+                    result = new KeyValuePair<int, string>(2014,  "Культурный центр \"Франкотека\" 2 этаж");
                     break;
                 case "Центр славянских культур":
-                    result = "Центр славянских культур 4 этаж";
+                    result = new KeyValuePair<int, string>(2036,  "Центр славянских культур 4 этаж");
                     break;
                 case "КО автоматизации":
-                    result = "Центр инновационных информационных технологий";
+                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
                     break;
                 case "КО комплектования и ОД. Сектор комплектования – группа регистрации":
-                    result = "Отдел комплектования";
+                    result = new KeyValuePair<int, string>(2025,  "Отдел комплектования");
                     break;
                 case "КО обслуживания – зал абонементного обслуживания":
-                    result = "Зал абонементного обслуживания 2 этаж";
-                    break;
-                case "Сектор научной реставрации":
-                    result = "Отдел хранения и реставрации";
+                    result = new KeyValuePair<int, string>(2006,  "Зал абонементного обслуживания 2 этаж");
                     break;
                 default:
-                    result = "нет данных";
+                    result = new KeyValuePair<int, string>(2000,  "нет данных");
                     break;
             }
 

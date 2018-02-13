@@ -67,9 +67,11 @@ namespace ExportBJ_XML.classes
                 writer.WriteStartObject();
 
                 writer.WritePropertyName("exemplar_carrier");
-                writer.WriteValue("Электронная книга");
+                //writer.WriteValue("Электронная книга");
+                writer.WriteValue("3012");
                 writer.WritePropertyName("exemplar_access");
-                writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
+                writer.WriteValue("1008");
+                //writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
                 writer.WritePropertyName("exemplar_hyperlink");
                 writer.WriteValue("https://ebooks.libfl.ru/product/" + token["id"].ToString());
                 writer.WritePropertyName("exemplar_copyright");
@@ -77,19 +79,20 @@ namespace ExportBJ_XML.classes
                 writer.WritePropertyName("exemplar_id");
                 writer.WriteValue("ebook");
                 writer.WritePropertyName("exemplar_location");
-                writer.WriteValue("Интернет");
+                writer.WriteValue("2024");
 
                 writer.WriteEndObject();
                 writer.WriteEndObject();
 
 
-                AddField("MethodOfAccess", "Удалённый доступ");
-                AddField("Location", "Интернет");
+                AddField("MethodOfAccess", "4002");
+                AddField("Location", "2041");
                 AddField("Exemplar", sb.ToString());
                 AddField("id", "Pearson_" + token["id"].ToString());
                 AddField("HyperLink", "https://ebooks.libfl.ru/product/" + token["id"].ToString() );
-                AddField("fund", "Pearson");
+                AddField("fund", "5008");
                 AddField("Level", "Монография");
+                AddField("format", "3012");
 
 
                 _doc.WriteTo(_objXmlWriter);

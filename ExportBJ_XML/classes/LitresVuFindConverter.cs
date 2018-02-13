@@ -192,9 +192,11 @@ namespace ExportBJ_XML.classes
                 writer.WriteStartObject();
 
                 writer.WritePropertyName("exemplar_carrier");
-                writer.WriteValue("Электронная книга");
+                //writer.WriteValue("Электронная книга");
+                writer.WriteValue("3012");
                 writer.WritePropertyName("exemplar_access");
-                writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
+                //writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
+                writer.WriteValue("1004");
                 writer.WritePropertyName("exemplar_hyperlink");
                 writer.WriteValue(hypLink);
 
@@ -209,12 +211,13 @@ namespace ExportBJ_XML.classes
                 writer.WriteEndObject();
 
 
-                AddField("MethodOfAccess", "Удалённый доступ");
-                AddField("Location", "Интернет");
+                AddField("MethodOfAccess", "4002");
+                AddField("Location", "2040");
                 AddField("Exemplar", sb.ToString());
                 AddField("id", "Litres_" + elt.Attribute("id").Value);
-                AddField("fund", "Литрес");
+                AddField("fund", "5007");
                 AddField("Level", "Монография");
+                AddField("format", "3012");
 
 
                 _doc.WriteTo(_objXmlWriter);

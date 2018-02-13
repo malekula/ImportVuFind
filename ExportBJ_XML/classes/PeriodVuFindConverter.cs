@@ -127,7 +127,7 @@ namespace ExportBJ_XML.classes
 
 
                 AddField("id", "period_" + row["POLE"]);
-                AddField("fund", GetRusFund("period"));
+                AddField("fund", GetFundId("period"));
                 AddField("allfields", allFields);
                 AddField("period_RecordTree", RecordTree);
                 allFields = "";

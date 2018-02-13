@@ -244,15 +244,15 @@ namespace ExportBJ_XML
 
             bjvvv.Export();
             redkostj.Export();
-            //bjacc.Export();
-            //bjfcc.Export();
-            //bjscc.Export();
-            brit_sovet.Export();
+            bjacc.Export();
+            bjfcc.Export();
+            bjscc.Export();
+            //brit_sovet.Export();
             //pearson.GetPearsonSourceData();
-            //pearson.Export();
+            pearson.Export();
             //litres.GetLitresSourceData();
-            //litres.Export();
-            //period.Export();
+            litres.Export();
+            period.Export();
 
             StopTimer();
 
