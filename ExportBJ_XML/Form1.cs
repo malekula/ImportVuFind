@@ -101,7 +101,7 @@ namespace ExportBJ_XML
 
         private void button2_Click(object sender, EventArgs e)
         {
-            pearson.GetPearsonSourceData();
+            //pearson.GetPearsonSourceData();
             
             //XDocument xdoc = XDocument.Load(@"f:\import\bjvvv.xml");
             //var books = xdoc.Descendants("doc");
@@ -160,7 +160,25 @@ namespace ExportBJ_XML
             //arr.Add(nnn[12]);
             //string res = cli.GetBookStatus(arr);
 
+            //SqlDataAdapter da = new SqlDataAdapter();
 
+            //da = new SqlDataAdapter();
+            //da.InsertCommand = new SqlCommand();
+            //da.InsertCommand.Connection = new SqlConnection();
+            //da.InsertCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
+            //da.InsertCommand.Connection.Open();
+            //StreamReader sr = new StreamReader(@"f:\Lib_100S30708.txt");
+            //string account;
+            //while (sr.Peek() >= 0)
+            //{
+            //    account = sr.ReadLine();
+            //    da.InsertCommand.Parameters.Clear();
+            //    da.InsertCommand.Parameters.AddWithValue("login", account.Split(',')[0]);
+            //    da.InsertCommand.Parameters.AddWithValue("pwd", account.Split(',')[1]);
+            //    da.InsertCommand.CommandText = "insert into LITRES..ACCOUNTS (LRLOGIN,LRPWD,CREATED) values (@login, @pwd, getdate())";
+            //    da.InsertCommand.ExecuteNonQuery();
+            //}
+            //da.InsertCommand.Connection.Close();
             
         }
 
@@ -249,10 +267,10 @@ namespace ExportBJ_XML
             bjscc.Export();
             //brit_sovet.Export();
             //pearson.GetPearsonSourceData();
-            pearson.Export();
+            //pearson.Export();
             //litres.GetLitresSourceData();
-            litres.Export();
-            period.Export();
+            //litres.Export();
+            //period.Export();
 
             StopTimer();
 

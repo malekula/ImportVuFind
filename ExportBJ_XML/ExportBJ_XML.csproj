@@ -55,8 +55,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="classes\BJVuFindConverter.cs" />
-    <Compile Include="classes\Extensions.cs" />
+    <Compile Include="classes\BJ\AuthoritativeFile.cs" />
+    <Compile Include="classes\BJ\BJField.cs" />
+    <Compile Include="classes\BJ\BJVuFindConverter.cs" />
+    <Compile Include="classes\BJ\BookInfo.cs" />
+    <Compile Include="classes\BJ\ElectronicExemplarInfo.cs" />
+    <Compile Include="classes\BJ\ExemplarAccess.cs" />
+    <Compile Include="classes\BJ\ExemplarInfo.cs" />
+    <Compile Include="classes\Utilites\Extensions.cs" />
     <Compile Include="classes\JBHVuFindConverter.cs" />
     <Compile Include="classes\LitresVuFindConverter.cs" />
     <Compile Include="classes\PearsonVuFindConverter.cs" />
