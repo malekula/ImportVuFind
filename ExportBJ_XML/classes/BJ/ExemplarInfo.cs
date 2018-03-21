@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using ExportBJ_XML.classes;
+using ExportBJ_XML.classes.BJ;
 
 
 namespace ExportBJ_XML.ValueObjects
@@ -33,19 +34,17 @@ namespace ExportBJ_XML.ValueObjects
 
         internal BJField AddField(string fieldValue, int mNFIELD, string mSFIELD)
         {
-            BJField search = Fields.First(code => code.MNFIELD == mNFIELD && code.MSFIELD == mSFIELD);
+            BJField search = Fields.FirstOrDefault(code => code.MNFIELD == mNFIELD && code.MSFIELD == mSFIELD);
             if (search == null)
             {
-                search = new BJField();
-                search.MNFIELD = mNFIELD;
-                search.MSFIELD = mSFIELD;
+                search = new BJField(mNFIELD, mSFIELD);
                 search.Add(fieldValue);
+                Fields.Add(search);
             }
             else
             {
                 search.Add(fieldValue);
             }
-            Fields.Add(search);
             return search;
         }
         internal BJField AddField(string fieldValue, int mNFIELD, string mSFIELD, AuthoritativeFile af)

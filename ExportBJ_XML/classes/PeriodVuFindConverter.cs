@@ -173,7 +173,7 @@ namespace ExportBJ_XML.classes
             return sb.ToString();
         }
 
-        public override void ExportSingleRecord(string idmain)
+        public override void ExportSingleRecord(int idmain)
         {
             _objXmlWriter = XmlTextWriter.Create(@"F:\import\singleRecords\" + this.Fund + "_" + idmain + ".xml");
 

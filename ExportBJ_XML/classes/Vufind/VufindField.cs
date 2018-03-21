@@ -3,23 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ExportBJ_XML.classes.BJ
+namespace ExportBJ_XML.classes.BJ.Vufind
 {
-    public class AuthoritativeFile
+    public class VufindField
     {
-        private List<string> _valueList;
+         private List<string> _valueList;
 
-
-        public List<string> AFValues
-        {
-            get
-            {
-                return _valueList;
-            }
-        }
-
-
-        public AuthoritativeFile()
+         public VufindField()
         {
             _valueList = new List<string>();
         }

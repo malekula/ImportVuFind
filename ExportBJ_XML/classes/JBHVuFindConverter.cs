@@ -95,7 +95,7 @@ namespace ExportBJ_XML.classes
 
         }
 
-        public override void ExportSingleRecord(string idmain)
+        public override void ExportSingleRecord(int idmain)
         {
             throw new NotImplementedException();
         }

@@ -12,6 +12,7 @@ using System.Net;
 using System.Drawing;
 using ExportBJ_XML.classes.BJ;
 using ExportBJ_XML.ValueObjects;
+using ExportBJ_XML.classes.DB;
 
 namespace ExportBJ_XML.classes
 {
@@ -21,6 +22,7 @@ namespace ExportBJ_XML.classes
         public BJVuFindConverter(string fund)
         {
             this.Fund = fund;
+            DatabaseWrapper.Fund = fund;
         }
 
         private int _lastID = 1;
@@ -56,8 +58,8 @@ namespace ExportBJ_XML.classes
             for (int i = previous; i < MaxIDMAIN; i += step)
             {
                 _lastID = i;
-                string query = GetQuery( i );
-                DataTable record = ExecuteQuery(query);
+                DatabaseWrapper db = new DatabaseWrapper(this.Fund);
+                DataTable record = db.GetBJRecord(_lastID);
                 if (record.Rows.Count == 0) continue;
                 try
                 {
@@ -66,10 +68,6 @@ namespace ExportBJ_XML.classes
                 }
                 catch (Exception ex)
                 {
-
-                    //_f1.textBox1.Text += DateTime.Now.ToShortTimeString() + " - " + ex.Message + " ;\r\n ";
-                    //OnExportError
-                    //здесь записать пин в файл ошибок и продолжить.
                     errors.Add(this.Fund + "_" + i);
                     _doc = _exportDocument.CreateElement("doc");
                     continue;
@@ -88,7 +86,7 @@ namespace ExportBJ_XML.classes
             File.WriteAllLines(@"f:\import\importErrors\" + this.Fund + "Errors.txt", errors.ToArray());
 
         }
-        public override void ExportSingleRecord( string idmain )
+        public override void ExportSingleRecord( int idmain )
         {
             _objXmlWriter = XmlTextWriter.Create(@"F:\import\singleRecords\" + this.Fund + "_" + idmain + ".xml");
 
@@ -105,8 +103,9 @@ namespace ExportBJ_XML.classes
             /////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////TEST/////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////
-            string q = GetQuery( int.Parse(idmain) );
-            DataTable table = ExecuteQuery(q);
+            //DB.DatabaseWrapper( int.Parse(idmain) );
+            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
+            DataTable table = dbWrapper.GetBJRecord(idmain);
             int check = CreateBJDoc( table );
             if (check == 1) return;
             _doc.WriteTo(_objXmlWriter);
@@ -117,7 +116,7 @@ namespace ExportBJ_XML.classes
 
         private int CreateBJDoc( DataTable BJBook )
         {
-            string currentIDMAIN = BJBook.Rows[0]["IDMAIN"].ToString();
+            int currentIDMAIN = (int)BJBook.Rows[0]["IDMAIN"];
             string level = BJBook.Rows[0]["Level"].ToString();
             string level_id = BJBook.Rows[0]["level_id"].ToString();
             int lev_id = int.Parse(level_id);
@@ -132,7 +131,7 @@ namespace ExportBJ_XML.classes
             string Annotation = "";
             string CarrierCode = "";
             BJBookInfo book = new BJBookInfo();
-            BJField field = new BJField();
+            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             foreach (DataRow r in BJBook.Rows)
             {
 
@@ -189,10 +188,7 @@ namespace ExportBJ_XML.classes
                         book.AddField(r["PLAIN"].ToString(), (int)r["MNFIELD"], r["MSFIELD"].ToString());
                         break;
                     case "10$a":
-                        query = " select * from " + this.Fund + "..DATAEXT A " +
-                           " left join " + this.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                           " where A.MNFIELD = 10 and A.MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
-                        clarify = ExecuteQuery(query);
+                        clarify = dbWrapper.Clarify_10a((int)r["IDDATA"]);
                         string add = r["PLAIN"].ToString();
                         if (clarify.Rows.Count != 0)
                         {
@@ -207,7 +203,7 @@ namespace ExportBJ_XML.classes
                         break;
                     case "101$a":
                         query = " select NAME from " + this.Fund + "..LIST_1 " + " where ID = " + r["IDINLIST"].ToString();
-                        clarify = ExecuteQuery(query);
+                        clarify = dbWrapper.Clarify_10a((int)r["IDDATA"]);
                         if (clarify.Rows.Count == 0)
                         {
                             AddField("language", r["PLAIN"].ToString());
@@ -228,20 +224,13 @@ namespace ExportBJ_XML.classes
                         book.AddField(r["PLAIN"].ToString(), (int)r["MNFIELD"], r["MSFIELD"].ToString());
                         break;
                     case "517$a":
-                        query = " select B.PLAIN from " + this.Fund + "..DATAEXT A " +
-                                " left join " + this.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                " where MNFIELD = 517 and MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
-                        clarify = ExecuteQuery(query);
-                        if (clarify.Rows.Count != 0)
-                        {
-                            AddField("title_alt", "(" + clarify.Rows[0]["PLAIN"].ToString() + ")" + r["PLAIN"].ToString());
-                            book.AddField("(" + clarify.Rows[0]["PLAIN"].ToString() + ")" + r["PLAIN"].ToString(), (int)r["MNFIELD"], r["MSFIELD"].ToString());
-                        }
-                        else
-                        {
-                            AddField("title_alt", r["PLAIN"].ToString());
-                            book.AddField(r["PLAIN"].ToString(), (int)r["MNFIELD"], r["MSFIELD"].ToString());
-                        }
+                        clarify = dbWrapper.Clarify_517a((int)r["IDDATA"]);
+                        string fieldValue;
+                        fieldValue = (clarify.Rows.Count != 0) ?
+                            "(" + clarify.Rows[0]["PLAIN"].ToString() + ")" + r["PLAIN"].ToString() :
+                            r["PLAIN"].ToString();
+                        AddField("title_alt", fieldValue);
+                        book.AddField(fieldValue, (int)r["MNFIELD"], r["MSFIELD"].ToString());
                         //нужно специальным образом обрабатывать
                         break;
                     //=======================================================================добавленные в индекс=======================
@@ -362,28 +351,20 @@ namespace ExportBJ_XML.classes
                         string PublicationInfo = r["PLAIN"].ToString();
 
                         // 205$b
-                        query = " select * from " + this.Fund + "..DATAEXT A " +
-                                " left join " + this.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                " where A.MNFIELD = 205 and A.MSFIELD = '$b' and A.IDDATA = " + r["IDDATA"].ToString();
-                        clarify = ExecuteQuery(query);
+                         
+                        clarify = dbWrapper.Clarify_205a_1((int)r["IDDATA"]);
                         foreach (DataRow rr in clarify.Rows)
                         {
                             PublicationInfo += "; " + rr["PLAIN"].ToString();
                         }
                         // 205$f
-                        query = " select * from " + this.Fund + "..DATAEXT A " +
-                                " left join " + this.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                " where A.MNFIELD = 205 and A.MSFIELD = '$f' and A.IDDATA = " + r["IDDATA"].ToString();
-                        clarify = ExecuteQuery(query);
+                        clarify = dbWrapper.Clarify_205a_2((int)r["IDDATA"]);
                         foreach (DataRow rr in clarify.Rows)
                         {
                             PublicationInfo += " / " + rr["PLAIN"].ToString();
                         }
                         // 205$g
-                        query = " select * from " + this.Fund + "..DATAEXT A " +
-                                " left join " + this.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                                " where A.MNFIELD = 205 and A.MSFIELD = '$g' and A.IDDATA = " + r["IDDATA"].ToString();
-                        clarify = ExecuteQuery(query);
+                        clarify = dbWrapper.Clarify_205a_3((int)r["IDDATA"]);
                         foreach (DataRow rr in clarify.Rows)
                         {
                             PublicationInfo += "; " + rr["PLAIN"].ToString();
@@ -520,12 +501,7 @@ namespace ExportBJ_XML.classes
                         book.AddField(r["PLAIN"].ToString(), (int)r["MNFIELD"], r["MSFIELD"].ToString());
                         break;
                     case "606$a"://"""""" • """"""
-                        query = "select * " +
-                                " from "+this.Fund+"..TPR_CHAIN A " +
-                                " left join "+this.Fund+"..TPR_TES B on A.IDTES = B.ID " +
-                                " where A.IDCHAIN = " + r["SORT"].ToString() +
-                                " order by IDORDER";
-                        clarify = ExecuteQuery(query);
+                        clarify = dbWrapper.Clarify_606a((int)r["SORT"]);
                         if (clarify.Rows.Count == 0) break;
                         string TPR = "";
                         foreach (DataRow rr in clarify.Rows)
@@ -590,16 +566,14 @@ namespace ExportBJ_XML.classes
             return 0;
         }
 
-        private void AddExemplarFields(string idmain, XmlDocument _exportDocument, string fund, BJBookInfo book)
+
+        private void AddExemplarFields(int idmain, XmlDocument _exportDocument, string fund, BJBookInfo book)
         {
 
-            string query = " select distinct A.IDMAIN, A.IDDATA from " + fund + "..DATAEXT A" +
-                            " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                            " where A.IDMAIN = " + idmain + " and (A.MNFIELD = 899 and A.MSFIELD = '$p' or A.MNFIELD = 899 and A.MSFIELD = '$a' or A.MNFIELD = 899 and A.MSFIELD = '$w') " +
-                            " and not exists (select 1 from BJVVV..DATAEXT C where C.IDDATA = A.IDDATA and C.MNFIELD = 921 and C.MSFIELD = '$c' and C.SORT = 'Списано')";
-            DataTable table = ExecuteQuery(query);
+            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
+            DataTable table = dbWrapper.GetAllExemplars(idmain);
             if (table.Rows.Count == 0) return;
-            string IDMAIN = table.Rows[0]["IDMAIN"].ToString();
+            int IDMAIN = (int)table.Rows[0]["IDMAIN"];
 
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
@@ -644,10 +618,7 @@ namespace ExportBJ_XML.classes
             string CarrierCode = "";
             foreach (DataRow iddata in table.Rows)
             {
-                query = " select * from " + fund + "..DATAEXT A" +
-                        " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                        " where A.IDDATA = " + iddata["IDDATA"];
-                exemplar = ExecuteQuery(query);
+                exemplar = dbWrapper.GetExemplar((int)iddata["IDDATA"]);
                 writer.WritePropertyName(cnt++.ToString());
                 writer.WriteStartObject();
 
@@ -875,10 +846,7 @@ namespace ExportBJ_XML.classes
             }
 
             //смотрим есть ли гиперссылка
-            query = " select * from " + fund + "..DATAEXT A" +
-                    " left join " + fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
-                    " where A.MNFIELD = 940 and A.MSFIELD = '$a' and A.IDMAIN = " + IDMAIN;
-            table = ExecuteQuery(query);
+            table = dbWrapper.GetHyperLink(IDMAIN);
             if (table.Rows.Count != 0)//если есть - вставляем отдельным экземпляром. после электронной инвентаризации этот кусок можно будет убрать
             {
                 //ExemplarInfo bjExemplar = new ExemplarInfo(-1);
@@ -892,17 +860,8 @@ namespace ExportBJ_XML.classes
                 //Exemplar += "Гиперссылка: " + ds.Tables["t"].Rows[0]["PLAIN"].ToString() + " #";
                 writer.WritePropertyName("exemplar_hyperlink");
                 writer.WriteValue(table.Rows[0]["PLAIN"].ToString());
-                if (fund == "BJVVV")
-                {
-                    query = " select * from BookAddInf..ScanInfo A" +
-                    " where A.IDBase = 1 and A.IDBook = " + IDMAIN;
-                }
-                if (fund == "REDKOSTJ")
-                {
-                    query = " select * from BookAddInf..ScanInfo A" +
-                    " where A.IDBase = 2 and A.IDBook = " + IDMAIN;
-                }
-                DataTable hyperLinkTable = ExecuteQuery(query);
+
+                DataTable hyperLinkTable = dbWrapper.GetBookScanInfo(IDMAIN);
                 bool ForAllReader = false;
                 if (hyperLinkTable.Rows.Count != 0)
                 {
@@ -1227,6 +1186,7 @@ namespace ExportBJ_XML.classes
         //это полный шлак. срочно нужно рефакторить, пока не поздно.
         private ExemplarAccessInfo GetExemplarAccess(string f_899a, string f_899b, string f_899p, string f_921c, string f_899x, string f_921d, string f_921a, string f_482a)
         {
+
             ExemplarAccessInfo access = new ExemplarAccessInfo();
             //сначала суперусловия
             if (f_899x.ToLower().Contains("э"))
@@ -1271,7 +1231,7 @@ namespace ExportBJ_XML.classes
                     {
                         access.Access = "1015";
 
-                        access.MethodOfAccess = ;
+                        //access.MethodOfAccess = ;
 
                     }
                     if (f_899a.ToLower().Contains("зал"))
@@ -1375,16 +1335,12 @@ namespace ExportBJ_XML.classes
         public override void ExportCovers()
         {
             StringBuilder sb = new StringBuilder();
-            //sb.Append("select distinct IDMAIN from "+this.Fund+"..IMAGES where IDMAO");
-            sb.Append("select IDMAIN from "+this.Fund+"..IMAGES");
-
-            DataTable table = ExecuteQuery(sb.ToString());
+            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
+            DataTable table = dbWrapper.GetAllIdmainWithImages();
             List<string> errors = new List<string>();
             foreach (DataRow row in table.Rows)
             {
-                sb.Length = 0;
-                sb.AppendFormat("select IDMAIN, PIC from " + this.Fund + "..IMAGES where IDMAIN = {0}", row["IDMAIN"].ToString());
-                DataTable pics = ExecuteQuery(sb.ToString());
+                DataTable pics = dbWrapper.GetImage((int)row["IDMAIN"]);
                 int i = 0;
                 foreach (DataRow pic in pics.Rows)
                 {
@@ -1420,11 +1376,12 @@ namespace ExportBJ_XML.classes
 
         }
 
-        private void AddHierarchyFields(string ParentPIN, string CurrentPIN)
+        private void AddHierarchyFields(int ParentPIN, int CurrentPIN)
         {
             string query = " select * from " + this.Fund + "..DATAEXT " +
                                " where IDMAIN = " + ParentPIN;
-            DataTable table = ExecuteQuery(query);
+            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
+            DataTable table = dbWrapper.GetBJRecord(ParentPIN);
             string TopHierarchyId = GetTopId( ParentPIN );
             AddField("hierarchy_top_id", this.Fund + "_" + TopHierarchyId);
 
@@ -1482,22 +1439,21 @@ namespace ExportBJ_XML.classes
                 if (!metka) AddField("is_hierarchy_title", is_hierarchy_title);
             }
         }
-        private string GetTopId(string ParentPIN)
+        private int GetTopId(int ParentPIN)
         {
-            string query = " select * from " + this.Fund + "..DATAEXT " +
-                           " where MNFIELD = 225 and MSFIELD = '$a' and IDMAIN = " + ParentPIN;
-            DataTable table = ExecuteQuery(query);
+            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
+            DataTable table = dbWrapper.GetParentIDMAIN(ParentPIN);
             if (table.Rows.Count == 0)
             {
                 return ParentPIN;
             }
-            ParentPIN = table.Rows[0]["SORT"].ToString();
+            ParentPIN = (int)table.Rows[0]["SORT"];
             return GetTopId(ParentPIN);
         }
         private int GetMaxIDMAIN()
         {
-            string query = "select max(ID) from " + this.Fund + "..MAIN";
-            DataTable table = ExecuteQuery(query);
+            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
+            DataTable table = dbWrapper.GetMaxIDMAIN();
             return int.Parse(table.Rows[0][0].ToString());
         }
         private AuthoritativeFile GetAFAll( string AFLinkId, string AFTable)
@@ -1518,302 +1474,9 @@ namespace ExportBJ_XML.classes
             }
             return result;
         }
-        private string GetQuery( int idmain )
-        {
-            return "select A.*,cast(A.MNFIELD as nvarchar(10))+A.MSFIELD code,A.SORT,B.PLAIN, C.IDLEVEL level_id, " +
-                    " case when C.IDLEVEL = 1 then 'Монография'  " +
-                    "  when C.IDLEVEL = -100 then 'Коллекция'  " +
-                    "  when C.IDLEVEL = -2 then 'Сводный уровень многотомного издания'  " +
-                    "  when C.IDLEVEL = 2 then 'Том (выпуск) многотомного издания'  " +
-                    "  when C.IDLEVEL = -3 then 'Сводный уровень сериального издания'  " +
-                    "  when C.IDLEVEL = -33 then 'Сводный уровень подсерии, входящей в серию'  " +
-                    "  when C.IDLEVEL = 3 then 'Выпуск сериального издания'  " +
-                    "  when C.IDLEVEL = -4 then 'Сводный уровень сборника'  " +
-                    "  when C.IDLEVEL = 4 then 'Часть сборника'  " +
-                    "  when C.IDLEVEL = -5 then 'Сводный уровень продолжающегося издания'  " +
-                    "  when C.IDLEVEL = 5 then 'Выпуск продолжающегося издания' else '' end level " +
-                    "  ,A.MNFIELD, A.MSFIELD " +
-                    " from " + this.Fund + "..DATAEXT A" +
-                    " left join " + this.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
-                    " left join " + this.Fund + "..MAIN C on A.IDMAIN = C.ID " +
-                //" where A.IDMAIN between " + count + " and " + (count + 999).ToString() +//типа для ускорения, но можно явно пин указать же. не помню.
-                    " where A.IDMAIN = " + idmain +
-                //" and exists (select 1 from BRIT_SOVET..DATAEXT C where A.IDMAIN = C.IDMAIN and C.MNFIELD = 899 and C.MSFIELD = '$p')" +
-                    " order by IDMAIN, IDDATA";
-        }
-        private DataTable ExecuteQuery(string query)
-        {
-            SqlDataAdapter da = new SqlDataAdapter();
-            da.SelectCommand = new SqlCommand();
-            da.SelectCommand.Connection = new SqlConnection();
-            da.SelectCommand.Connection.ConnectionString = "Data Source=192.168.4.25,1443;Initial Catalog=Reservation_R;Persist Security Info=True;User ID=sasha;Password=Corpse536;Connect Timeout=1200";
-            da.SelectCommand.CommandText = query;
-            DataSet ds = new DataSet();
-            while (true)
-            {
-                try
-                {
-                    da.Fill(ds, "t");
-                    break;
-                }
-                catch (SqlException ex)
-                {
-                    if (ex.Number != -2) throw;
-                    //это событиями переделать
-                    VuFindConverterEventArgs args = new VuFindConverterEventArgs();
-                    args.RecordId = _lastID.ToString();
-
-                    //this.OnDatabaseTimeout
-                    
-                    //_f1.textBox1.Text += DateTime.Now.ToShortTimeString() + " - " + ex.Message + " ;\r\n ";
-                    //Application.DoEvents();
-                    Thread.Sleep(5000);
-                    continue;
-                }
-            }
-            return ds.Tables["t"];
-        }
 
 
-        //это нужно превратить в словарь
-        private KeyValuePair<int, string> GetUnifiedLocation(string location)
-        {
-            KeyValuePair<int, string> result = new KeyValuePair<int, string>();
-            //Dictionary<int, string> Locations = new Dictionary<int, string>();
-            //Locations[2000] = "SDS";
-            switch (location)
-            {
-                case "ЦМС Академия Рудомино":
-                    result = new KeyValuePair<int, string>(2000, "Академия \"Рудомино\"");
-                    break;
-                case "…Выст… КОО Группа справочного-информационного обслуживания":
-                    result = new KeyValuePair<int, string>(2001, "Выставка книг 2 этаж");
-                    break;
-                case "…ЗалФ… Отдел детской книги и детских программ":
-                    result = new KeyValuePair<int, string>(2003,  "Детский зал 2 этаж"); 
-                    break;
-                case "ЦМС ОР Дом еврейской книги":
-                    result = new KeyValuePair<int, string>(2005,  "Дом еврейской книги 3 этаж");
-                    break;
-                case "…Зал… КОО Группа абонементного обслуживания":
-                    result = new KeyValuePair<int, string>(2006,  "Зал абонементного обслуживания 2 этаж");
-                    break;
-                case "…Зал… КОО Группа выдачи документов":
-                    result = new KeyValuePair<int, string>(2007,  "Зал выдачи документов 2 этаж");
-                    break;
-                case "…Зал… КНИО Группа искусствоведения":
-                    result = new KeyValuePair<int, string>(2008,  "Зал искусствоведения 4 этаж");
-                    break;
-                case "…Зал… КНИО Группа редкой книги":
-                    result = new KeyValuePair<int, string>(2009,  "Зал редкой книги 4 этаж");
-                    break;
-                case "…ЗалФ… КНИО Группа религоведения":
-                    result = new KeyValuePair<int, string>(2010,  "Зал религиоведения 4 этаж");
-                    break;
-                case "…Хран… Сектор книгохранения - 0 этаж":
-                    result = new KeyValuePair<int, string>(2011,  "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - 2 этаж":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - 3 этаж":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - 4 этаж":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - 5 этаж":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - 6 этаж":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - 7 этаж":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - Абонемент":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… Сектор книгохранения - Новая периодика":
-                    result = new KeyValuePair<int, string>(2011, "Книгохранение");
-                    break;
-                case "…Хран… КНИО Группа хранения редкой книги":
-                    result = new KeyValuePair<int, string>(2012,  "Книгохранение редкой книги");
-                    break;
-                case "Книжный клуб":
-                    result = new KeyValuePair<int, string>(2013,  "Книжный клуб 1 этаж");
-                    break;
-                case "…ЗалФ… ЦМС ОР Культурный центр Франкотека":
-                    result = new KeyValuePair<int, string>(2014,  "Культурный центр \"Франкотека\" 2 этаж");
-                    break;
-                case "…ЗалФ… ЦМС ОР Лингвистический ресурсный центр Pearson":
-                    result = new KeyValuePair<int, string>(2015,  "Лингвистический ресурсный центр Pearson 3 этаж");
-                    break;
-                case "КНИО - Комплексный научно-исследовательский отдел":
-                    result = new KeyValuePair<int, string>(2016,  "Научно-исследовательский отдел");
-                    break;
-                case "…Обраб… КО КОД Сектор ОД - Группа инвентаризации":
-                    result = new KeyValuePair<int, string>(2017,  "Обработка в группе инвентаризации");
-                    break;
-                case "…Обраб… КО КОД Сектор ОД - Группа каталогизации":
-                    result = new KeyValuePair<int, string>(2018,  "Обработка в группе каталогизации");
-                    break;
-                case "…Обраб… КО ХКРФ Сектор микрофильмирования":
-                    result = new KeyValuePair<int, string>(2019,  "Обработка в группе микрофильмирования");
-                    break;
-                case "…Обраб… ЦИИТ Группа оцифровки":
-                    result = new KeyValuePair<int, string>(2020,  "Обработка в группе оцифровки");
-                    break;
-                case "…Обраб… КО КОД Сектор ОД - Группа систематизации":
-                    result = new KeyValuePair<int, string>(2021,  "Обработка в группе систематизации");
-                    break;
-                case "…Обраб… КО КОД Сектор комплектования":
-                    result = new KeyValuePair<int, string>(2022,  "Обработка в секторе комплектования");
-                    break;
-                case "…Обраб… КО ХКРФ Сектор научной реставрации":
-                    result = new KeyValuePair<int, string>(2023,  "Обработка в секторе научной реставрации");
-                    break;
-                case "…Хран… Сектор книгохранения - Овальный зал":
-                    result = new KeyValuePair<int, string>(2024,  "Овальный зал");
-                    break;
-                case "КО КОД - Комплексный отдел комплектования и обработки документов":
-                    result = new KeyValuePair<int, string>(2025,  "Отдел комплектования");
-                    break;
-                case "КОО - Комплексный отдел обслуживания":
-                    result = new KeyValuePair<int, string>(2026,  "Отдел обслуживания");
-                    break;
-                case "КОО Группа регистрации":
-                    result = new KeyValuePair<int, string>(2026,  "Отдел обслуживания");
-                    break;
-                case "КО ХКРФ - Комплексный отдел хранения, консервации и реставрации фондов":
-                    result = new KeyValuePair<int, string>(2027,  "Отдел хранения и реставрации");
-                    break;
-                case "ЦКПП Редакционно-издательский отдел":
-                    result = new KeyValuePair<int, string>(2028,  "Редакционно-издательский отдел");
-                    break;
-                case "КО ХКРФ Сектор книгохранения":
-                    result = new KeyValuePair<int, string>(2011,  "Сектор книгохранения");
-                    break;
-                case "КО КОД Сектор ОД":
-                    result = new KeyValuePair<int, string>(2029,  "Сектор обработки документов");
-                    break;
-                case "…Хран… ЦИИТ Сервера библиотеки":
-                    result = new KeyValuePair<int, string>(2030,  "Сервера библиотеки");
-                    break;
-                case "Д Бухгалтерия":
-                    result = new KeyValuePair<int, string>(2031,  "Служебные подразделения");
-                    break;
-                case "Д Группа экспедиторского обслуживания":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д Контрактная служба":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д Отдел PR и редакция сайта":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д Отдел безопасности":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д Отдел внутреннего финансового контроля":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д Отдел по работе с персоналом":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д Отдел финансового планирования и сводной отчетности":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д УЭ - Управление по эксплуатации объектов недвижимости и обеспечения деятельности":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д УЭ Служба материально-технического обеспечения":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д УЭ Служба управления инженерными системами":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "Д УЭ Служба эксплуатации зданий и благоустройства":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "ЦБИД - Центр библиотечно-информационной деятельности и поддержки чтения":
-                    result = new KeyValuePair<int, string>(2031, "Служебные подразделения");
-                    break;
-                case "…ЗалФ… ЦМС ОР Центр американской культуры":
-                    result = new KeyValuePair<int, string>(2032,  "Центр американской культуры 3 этаж");
-                    break;
-                case "ЦИИТ - Центр инновационных информационных технологий":
-                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
-                    break;
-                case "ЦИИТ Группа IT":
-                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
-                    break;
-                case "ЦИИТ Группа автоматизации":
-                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
-                    break;
-                case "ЦИИТ Группа развития":
-                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
-                    break;
-                case "ЦКПП - Центр культурно-просветительских программ":
-                    result = new KeyValuePair<int, string>(2034,  "Центр культурно-просветительских программ");
-                    break;
-                case "ЦМС - Центр международного сотрудничества":
-                    result = new KeyValuePair<int, string>(2035,  "Центр международного сотрудничества");
-                    break;
-                case "ЦМС ОР - Отдел развития":
-                    result = new KeyValuePair<int, string>(2035, "Центр международного сотрудничества");
-                    break;
-                case "ЦМС ОР Отдел японской культуры":
-                    result = new KeyValuePair<int, string>(2035, "Центр международного сотрудничества");
-                    break;
-                case "ЦМС Отдел международного протокола":
-                    result = new KeyValuePair<int, string>(2035, "Центр международного сотрудничества");
-                    break;
-                case "ЦМРС - Центр межрегионального сотрудничества":
-                    result = new KeyValuePair<int, string>(2035, "Центр межрегионального сотрудничества");
-                    break;
-                case "…ЗалФ… ЦМС ОР Центр славянских культур":
-                    result = new KeyValuePair<int, string>(2036,  "Центр славянских культур 4 этаж");
-                    break;
-                case "…Зал… КОО Группа читального зала 3 этаж":
-                    result = new KeyValuePair<int, string>(2037,  "Читальный зал 3 этаж");
-                    break;
-                case "…Зал… КОО Группа электронного зала 2 этаж":
-                    result = new KeyValuePair<int, string>(2038,  "Электронный зал 2 этаж");
-                    break;
-                case "American cultural center":
-                    result = new KeyValuePair<int, string>(2039,  "Центр американской культуры 3 этаж");
-                    break;
-                case "American cultural center(!)":
-                    result = new KeyValuePair<int, string>(2039, "Центр американской культуры 3 этаж");
-                    break;
-                case "Выездная библиотека":
-                    result = new KeyValuePair<int, string>(2039, "Центр американской культуры 3 этаж");
-                    break;
-                case "Франкотека":
-                    result = new KeyValuePair<int, string>(2014,  "Культурный центр \"Франкотека\" 2 этаж");
-                    break;
-                case "Francothèque":
-                    result = new KeyValuePair<int, string>(2014,  "Культурный центр \"Франкотека\" 2 этаж");
-                    break;
-                case "Центр славянских культур":
-                    result = new KeyValuePair<int, string>(2036,  "Центр славянских культур 4 этаж");
-                    break;
-                case "КО автоматизации":
-                    result = new KeyValuePair<int, string>(2033,  "Центр инновационных информационных технологий");
-                    break;
-                case "КО комплектования и ОД. Сектор комплектования – группа регистрации":
-                    result = new KeyValuePair<int, string>(2025,  "Отдел комплектования");
-                    break;
-                case "КО обслуживания – зал абонементного обслуживания":
-                    result = new KeyValuePair<int, string>(2006,  "Зал абонементного обслуживания 2 этаж");
-                    break;
-                default:
-                    result = new KeyValuePair<int, string>(2000,  "нет данных");
-                    break;
-            }
 
-            return result;
-        }
+
     }
 }

@@ -108,7 +108,7 @@ namespace ExportBJ_XML.classes
             _objXmlWriter.Close();
         }
 
-        public override void ExportSingleRecord(string idmain)
+        public override void ExportSingleRecord(int idmain)
         {
             throw new NotImplementedException();
         }

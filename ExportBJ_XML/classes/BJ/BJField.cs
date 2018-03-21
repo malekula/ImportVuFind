@@ -19,8 +19,10 @@ namespace ExportBJ_XML.ValueObjects
     {
         private List<string> _valueList;
 
-        public BJField()
+        public BJField(int mNFIELD, string mSFIELD)
         {
+            this.MNFIELD = mNFIELD;
+            this.MSFIELD = mSFIELD;
             _valueList = new List<string>();
         }
 

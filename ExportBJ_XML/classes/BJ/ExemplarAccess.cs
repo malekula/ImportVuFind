@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ExportBJ_XML.classes
 {
-    class ExemplarAccessInfo
+    public class ExemplarAccessInfo
     {
         public string Access { get; set; }
         public string MethodOfAccess { get; set; }
