@@ -13,6 +13,8 @@ namespace ExportBJ_XML.classes.DB
     {
 
         public static string Fund { get; set; }
+        public static string AFTable { get; set; }
+
         public DatabaseWrapper(string fund)
         {
             Fund = fund;
@@ -150,6 +152,18 @@ namespace ExportBJ_XML.classes.DB
                 return this.ExecuteSelectQuery(dataAdapter);
             }
         }
+        
+        internal DataTable GetExemplar(string InventoryNumber)
+        {
+            string connectionString = AppSettings.ConnectionString;
+            DataSet ds = new DataSet();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_EXEMPLAR_BY_INVENTORY_NUMBER, connection);
+                dataAdapter.SelectCommand.Parameters.Add("inv", SqlDbType.NVarChar).Value = InventoryNumber;
+                return this.ExecuteSelectQuery(dataAdapter);
+            }
+        }
 
         internal DataTable GetHyperLink(int IDMAIN)
         {
@@ -230,6 +244,32 @@ namespace ExportBJ_XML.classes.DB
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_MAX_IDMAIN, connection);
+                return this.ExecuteSelectQuery(dataAdapter);
+            }
+        }
+
+        internal DataTable GetTitle(int IDMAIN)
+        {
+            string connectionString = AppSettings.ConnectionString;
+            DataSet ds = new DataSet();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_TITLE, connection);
+                dataAdapter.SelectCommand.Parameters.Add("idmain", SqlDbType.Int).Value = IDMAIN;
+                return this.ExecuteSelectQuery(dataAdapter);
+            }
+        }
+
+        internal DataTable GetAFAllValues(string AFTable, int AFLinkId)
+        {
+            string connectionString = AppSettings.ConnectionString;
+            DataSet ds = new DataSet();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                DatabaseWrapper.AFTable = AFTable;
+                //string QueryString = " select PLAIN from " + DatabaseWrapper.Fund + ".." + DatabaseWrapper.AFTable + " A " + " where IDAF = @AFLinkId";
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_AF_ALL_VALUES, connection);
+                dataAdapter.SelectCommand.Parameters.Add("AFLinkId", SqlDbType.Int).Value = AFLinkId;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
         }

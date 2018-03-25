@@ -266,11 +266,11 @@ namespace ExportBJ_XML
             bjfcc.Export();
             bjscc.Export();
             //brit_sovet.Export();
-            //pearson.GetPearsonSourceData();
-            //pearson.Export();
-            //litres.GetLitresSourceData();
-            //litres.Export();
-            //period.Export();
+            pearson.GetPearsonSourceData();
+            pearson.Export();
+            litres.GetLitresSourceData();
+            litres.Export();
+            period.Export();
 
             StopTimer();
 

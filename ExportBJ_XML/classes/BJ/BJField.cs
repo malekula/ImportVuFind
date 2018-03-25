@@ -43,6 +43,12 @@ namespace ExportBJ_XML.ValueObjects
 
         }
 
+        public string ToLower()
+        {
+            return this.ToString().ToLower();
+        }
+
+
         public int MNFIELD {get; set;}
         public string MSFIELD { get; set; }
 

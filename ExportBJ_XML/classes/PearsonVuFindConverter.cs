@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Xml.Linq;
 using System.Net;
+using ExportBJ_XML.classes.BJ;
 
 namespace ExportBJ_XML.classes
 {
@@ -71,6 +72,9 @@ namespace ExportBJ_XML.classes
                 writer.WriteValue("3012");
                 writer.WritePropertyName("exemplar_access");
                 writer.WriteValue("1008");
+                writer.WritePropertyName("exemplar_access_group");
+                writer.WriteValue(KeyValueMapping.AccessCodeToGroup[1008]);
+
                 //writer.WriteValue("Для прочтения онлайн необходимо перейти по ссылке");
                 writer.WritePropertyName("exemplar_hyperlink");
                 writer.WriteValue("https://ebooks.libfl.ru/product/" + token["id"].ToString());

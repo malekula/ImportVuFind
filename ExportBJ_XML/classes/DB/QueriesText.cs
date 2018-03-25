@@ -6,7 +6,7 @@ using ExportBJ_XML.classes.DB;
 
 namespace ExportBJ_XML.QueriesText
 {
-    public class Bibliojet
+    public static class Bibliojet
     {
         public static readonly string SELECT_RECORD_QUERY =
             "select A.*,cast(A.MNFIELD as nvarchar(10))+A.MSFIELD code,A.SORT,B.PLAIN, C.IDLEVEL level_id, " +
@@ -21,13 +21,13 @@ namespace ExportBJ_XML.QueriesText
                 "  when C.IDLEVEL = 4 then 'Часть сборника'  " +
                 "  when C.IDLEVEL = -5 then 'Сводный уровень продолжающегося издания'  " +
                 "  when C.IDLEVEL = 5 then 'Выпуск продолжающегося издания' else '' end level " +
-                "  ,A.MNFIELD, A.MSFIELD , F.NAME RusFieldName" +
+                "  ,A.MNFIELD, A.MSFIELD , F.NAME RusFieldName, F.IDBLOCK, A.IDDATA" +
                 " from " + DatabaseWrapper.Fund + "..DATAEXT A" +
                 " left join " + DatabaseWrapper.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
                 " left join " + DatabaseWrapper.Fund + "..MAIN C on A.IDMAIN = C.ID " +
                 " left join " + DatabaseWrapper.Fund + "..FIELDS F on A.MNFIELD = F.MNFIELD and A.MSFIELD = F.MSFIELD " +
                 " where A.IDMAIN = @idmain " +
-                " order by IDMAIN, IDDATA";
+                " order by A.IDMAIN, A.IDDATA";
 
         public static readonly string IMPORT_CLARIFY_10a = " select * from " + DatabaseWrapper.Fund + "..DATAEXT A " +
                            " left join " + DatabaseWrapper.Fund + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
@@ -65,6 +65,14 @@ namespace ExportBJ_XML.QueriesText
                         " left join " + DatabaseWrapper.Fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
                         " where A.IDDATA = @iddata";
 
+
+        public static readonly string GET_EXEMPLAR_BY_INVENTORY_NUMBER = " select * from " + DatabaseWrapper.Fund + "..DATAEXT A" +
+                        " left join " + DatabaseWrapper.Fund + "..DATAEXT B on A.IDDATA = B.IDDATA " +
+                        " left join " + DatabaseWrapper.Fund + "..DATAEXTPLAIN C on C.IDDATAEXT = B.ID " +
+                        " where A.MNFIELD = 899 and A.MSFIELD = '$p' and A.SORT = @inv" +
+                        " and not exists (select 1 from "+ DatabaseWrapper.Fund +"..DATAEXT C where A.IDDATA = C.IDDATA and MNFIELD = 482 and MSFIELD = '$a')";
+
+
         public static readonly string GET_HYPERLINK = " select * from " + DatabaseWrapper.Fund + "..DATAEXT A" +
                     " left join " + DatabaseWrapper.Fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
                     " where A.MNFIELD = 940 and A.MSFIELD = '$a' and A.IDMAIN = @idmain";
@@ -80,6 +88,20 @@ namespace ExportBJ_XML.QueriesText
                            " where MNFIELD = 225 and MSFIELD = '$a' and IDMAIN = @ParentPIN";
 
         public static readonly string GET_MAX_IDMAIN = "select max(ID) from " + DatabaseWrapper.Fund + "..MAIN";
+
+        public static readonly string GET_TITLE = " select * from " + DatabaseWrapper.Fund + "..DATAEXT A " +
+                    " left join " + DatabaseWrapper.Fund + "..DATAEXTPLAIN B on B.IDDATAEXT = A.ID " +
+                    " where A.IDMAIN = @idmain and MNFIELD = 200 and MSFIELD = '$a' ";
+
+        public static string GET_AF_ALL_VALUES  
+        {
+            get
+            {
+                return " select PLAIN from " + DatabaseWrapper.Fund + ".." + DatabaseWrapper.AFTable + " A " +
+                               " where IDAF = @AFLinkId";
+            }
+        }
+
 
     }
 

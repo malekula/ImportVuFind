@@ -58,6 +58,7 @@
     <Compile Include="classes\AppSettings.cs" />
     <Compile Include="classes\BJ\AuthoritativeFile.cs" />
     <Compile Include="classes\BJ\BJField.cs" />
+    <Compile Include="classes\BJ\BJFields.cs" />
     <Compile Include="classes\BJ\BJVuFindConverter.cs" />
     <Compile Include="classes\BJ\BJBookInfo.cs" />
     <Compile Include="classes\BJ\ElectronicExemplarInfo.cs" />
