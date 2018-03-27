@@ -25,11 +25,13 @@ namespace ExportBJ_XML
         BJVuFindConverter bjacc = new BJVuFindConverter("BJACC");
         BJVuFindConverter bjfcc = new BJVuFindConverter("BJFCC");
         BJVuFindConverter bjscc = new BJVuFindConverter("BJSCC");
-        BJVuFindConverter brit_sovet = new BJVuFindConverter("BRIT_SOVET");
+        //BJVuFindConverter brit_sovet = new BJVuFindConverter("BRIT_SOVET");
         LitresVuFindConverter litres = new LitresVuFindConverter();
         PeriodVuFindConverter period = new PeriodVuFindConverter();
         PearsonVuFindConverter pearson = new PearsonVuFindConverter();
         JBHVuFindConverter jbh = new JBHVuFindConverter();
+
+        Stopwatch sw;
 
         public Form1()
         {
@@ -37,7 +39,7 @@ namespace ExportBJ_XML
             
             bjvvv.RecordExported += new EventHandler(RecordExported);
             bjacc.RecordExported += new EventHandler(RecordExported);
-            brit_sovet.RecordExported += new EventHandler(RecordExported);
+            //brit_sovet.RecordExported += new EventHandler(RecordExported);
             bjfcc.RecordExported += new EventHandler(RecordExported);
             bjscc.RecordExported += new EventHandler(RecordExported);
             redkostj.RecordExported += new EventHandler(RecordExported);
@@ -54,12 +56,7 @@ namespace ExportBJ_XML
             label2.Text = ((VuFindConverterEventArgs)e).RecordId;
             Application.DoEvents();
         }
-        Stopwatch sw;
-        private void button1_Click(object sender, EventArgs e)
-        {
-          
-        }
-
+      
 
        
 
@@ -260,17 +257,17 @@ namespace ExportBJ_XML
         {
             StartTimer();
 
-            bjvvv.Export();
-            redkostj.Export();
             bjacc.Export();
             bjfcc.Export();
             bjscc.Export();
+            bjvvv.Export();
+            redkostj.Export();
             //brit_sovet.Export();
-            pearson.GetPearsonSourceData();
-            pearson.Export();
-            litres.GetLitresSourceData();
-            litres.Export();
-            period.Export();
+            //pearson.GetPearsonSourceData();
+            //pearson.Export();
+            //litres.GetLitresSourceData();
+            //litres.Export();
+            //period.Export();
 
             StopTimer();
 
@@ -279,7 +276,7 @@ namespace ExportBJ_XML
         private void brit_sovet_Click(object sender, EventArgs e)
         {
             StartTimer();
-            brit_sovet.Export();
+            //brit_sovet.Export();
             StopTimer();
         }
 
@@ -355,7 +352,7 @@ namespace ExportBJ_XML
 
             bjvvv.ExportCovers();
             redkostj.ExportCovers();
-            brit_sovet.ExportCovers();
+            //brit_sovet.ExportCovers();
             bjacc.ExportCovers();
             bjfcc.ExportCovers();
             bjscc.ExportCovers();
@@ -403,9 +400,9 @@ namespace ExportBJ_XML
                 case "REDKOSTJ":
                     redkostj.ExportSingleRecord(id);
                     break;
-                case "BRIT_SOVET":
-                    brit_sovet.ExportSingleRecord(id);
-                    break;
+                //case "BRIT_SOVET":
+                //    brit_sovet.ExportSingleRecord(id);
+                //    break;
                 case "BJACC":
                     bjacc.ExportSingleRecord(id);
                     break;

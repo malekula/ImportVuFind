@@ -12,12 +12,15 @@ namespace ExportBJ_XML.classes.DB
     class DatabaseWrapper
     {
 
-        public static string Fund { get; set; }
-        public static string AFTable { get; set; }
+        public string Fund { get; set; }
+        public string AFTable { get; set; }
+        public Bibliojet BJQueries;
+
 
         public DatabaseWrapper(string fund)
         {
-            Fund = fund;
+            this.Fund = fund;
+            BJQueries = new Bibliojet(fund);
         }
 
         private DataTable ExecuteSelectQuery(SqlDataAdapter da)
@@ -51,7 +54,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.SELECT_RECORD_QUERY, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.SELECT_RECORD_QUERY, connection);
                 dataAdapter.SelectCommand.Parameters.Add("idmain", SqlDbType.Int ).Value = idmain;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -63,7 +66,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.IMPORT_CLARIFY_10a, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.IMPORT_CLARIFY_10a, connection);
                 dataAdapter.SelectCommand.Parameters.Add("iddata", SqlDbType.Int).Value = iddata;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -75,7 +78,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.IMPORT_CLARIFY_517a, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.IMPORT_CLARIFY_517a, connection);
                 dataAdapter.SelectCommand.Parameters.Add("iddata", SqlDbType.Int).Value = iddata;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -87,7 +90,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.IMPORT_CLARIFY_205a_1, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.IMPORT_CLARIFY_205a_1, connection);
                 dataAdapter.SelectCommand.Parameters.Add("iddata", SqlDbType.Int).Value = iddata;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -99,7 +102,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.IMPORT_CLARIFY_205a_2, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.IMPORT_CLARIFY_205a_2, connection);
                 dataAdapter.SelectCommand.Parameters.Add("iddata", SqlDbType.Int).Value = iddata;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -111,7 +114,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.IMPORT_CLARIFY_205a_3, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.IMPORT_CLARIFY_205a_3, connection);
                 dataAdapter.SelectCommand.Parameters.Add("iddata", SqlDbType.Int).Value = iddata;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -123,7 +126,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.IMPORT_CLARIFY_606a, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.IMPORT_CLARIFY_606a, connection);
                 dataAdapter.SelectCommand.Parameters.Add("idchain", SqlDbType.Int).Value = idchain;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -135,7 +138,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_ALL_EXEMPLARS, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_ALL_EXEMPLARS, connection);
                 dataAdapter.SelectCommand.Parameters.Add("idmain", SqlDbType.Int).Value = idmain;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -147,7 +150,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_EXEMPLAR, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_EXEMPLAR, connection);
                 dataAdapter.SelectCommand.Parameters.Add("iddata", SqlDbType.Int).Value = iddata;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -159,7 +162,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_EXEMPLAR_BY_INVENTORY_NUMBER, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_EXEMPLAR_BY_INVENTORY_NUMBER, connection);
                 dataAdapter.SelectCommand.Parameters.Add("inv", SqlDbType.NVarChar).Value = InventoryNumber;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -171,7 +174,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_HYPERLINK, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_HYPERLINK, connection);
                 dataAdapter.SelectCommand.Parameters.Add("idmain", SqlDbType.Int).Value = IDMAIN;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -183,14 +186,14 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {                
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_BOOK_SCAN_INFO, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_BOOK_SCAN_INFO, connection);
                 dataAdapter.SelectCommand.Parameters.Add("idmain", SqlDbType.Int).Value = IDMAIN;
                 dataAdapter.SelectCommand.Parameters.Add("idbase", SqlDbType.Int);
-                if (DatabaseWrapper.Fund == "BJVVV")
+                if (this.Fund == "BJVVV")
                 {
                     dataAdapter.SelectCommand.Parameters["idbase"].Value = 1;
                 }
-                else if (DatabaseWrapper.Fund == "REDKOSTJ")
+                else if (this.Fund == "REDKOSTJ")
                 {
                     dataAdapter.SelectCommand.Parameters["idbase"].Value = 2;
                 }
@@ -208,7 +211,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_ALL_IDMAIN_WITH_IMAGES, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_ALL_IDMAIN_WITH_IMAGES, connection);
                 return this.ExecuteSelectQuery(dataAdapter);
             }
         }
@@ -219,7 +222,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_IMAGE, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_IMAGE, connection);
                 dataAdapter.SelectCommand.Parameters.Add("idmain", SqlDbType.Int).Value = idmain;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -231,7 +234,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_PARENT_PIN, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_PARENT_PIN, connection);
                 dataAdapter.SelectCommand.Parameters.Add("ParentPIN", SqlDbType.Int).Value = ParentPIN;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -243,7 +246,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_MAX_IDMAIN, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_MAX_IDMAIN, connection);
                 return this.ExecuteSelectQuery(dataAdapter);
             }
         }
@@ -254,7 +257,7 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_TITLE, connection);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_TITLE, connection);
                 dataAdapter.SelectCommand.Parameters.Add("idmain", SqlDbType.Int).Value = IDMAIN;
                 return this.ExecuteSelectQuery(dataAdapter);
             }
@@ -266,9 +269,8 @@ namespace ExportBJ_XML.classes.DB
             DataSet ds = new DataSet();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                DatabaseWrapper.AFTable = AFTable;
-                //string QueryString = " select PLAIN from " + DatabaseWrapper.Fund + ".." + DatabaseWrapper.AFTable + " A " + " where IDAF = @AFLinkId";
-                SqlDataAdapter dataAdapter = new SqlDataAdapter(QueriesText.Bibliojet.GET_AF_ALL_VALUES, connection);
+                BJQueries.AFTable = AFTable;
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(BJQueries.GET_AF_ALL_VALUES, connection);
                 dataAdapter.SelectCommand.Parameters.Add("AFLinkId", SqlDbType.Int).Value = AFLinkId;
                 return this.ExecuteSelectQuery(dataAdapter);
             }

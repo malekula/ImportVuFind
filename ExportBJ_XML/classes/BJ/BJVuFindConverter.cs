@@ -22,11 +22,11 @@ namespace ExportBJ_XML.classes
         public BJVuFindConverter(string fund)
         {
             this.Fund = fund;
-            DatabaseWrapper.Fund = fund;
+            this.dbWrapper = new DatabaseWrapper(fund);
         }
 
         private int _lastID = 1;
-
+        private DatabaseWrapper dbWrapper;
 
         public override void Export()
         {
@@ -58,8 +58,7 @@ namespace ExportBJ_XML.classes
             for (int i = previous; i < MaxIDMAIN; i += step)
             {
                 _lastID = i;
-                DatabaseWrapper db = new DatabaseWrapper(this.Fund);
-                DataTable record = db.GetBJRecord(_lastID);
+                DataTable record = dbWrapper.GetBJRecord(_lastID);
                 if (record.Rows.Count == 0) continue;
                 try
                 {
@@ -103,8 +102,6 @@ namespace ExportBJ_XML.classes
             /////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////TEST/////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////
-            //DB.DatabaseWrapper( int.Parse(idmain) );
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             DataTable table = dbWrapper.GetBJRecord(idmain);
             int check = CreateBJDoc( table );
             if (check == 1) return;
@@ -131,7 +128,6 @@ namespace ExportBJ_XML.classes
             string Annotation = "";
             string CarrierCode = "";
             //BJBookInfo book = new BJBookInfo();
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             foreach (DataRow r in BJBook.Rows)
             {
 
@@ -570,7 +566,6 @@ namespace ExportBJ_XML.classes
         private void AddExemplarFields(int idmain, XmlDocument _exportDocument, string fund)
         {
 
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             DataTable table = dbWrapper.GetAllExemplars(idmain);
             if (table.Rows.Count == 0) return;
             int IDMAIN = (int)table.Rows[0]["IDMAIN"];
@@ -943,7 +938,6 @@ namespace ExportBJ_XML.classes
         public override void ExportCovers()
         {
             StringBuilder sb = new StringBuilder();
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             DataTable table = dbWrapper.GetAllIdmainWithImages();
             List<string> errors = new List<string>();
             foreach (DataRow row in table.Rows)
@@ -988,7 +982,6 @@ namespace ExportBJ_XML.classes
         {
             string query = " select * from " + this.Fund + "..DATAEXT " +
                                " where IDMAIN = " + ParentPIN;
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             DataTable table = dbWrapper.GetBJRecord(ParentPIN);
             int TopHierarchyId = GetTopId( ParentPIN );
             AddField("hierarchy_top_id", this.Fund + "_" + TopHierarchyId);
@@ -1039,7 +1032,6 @@ namespace ExportBJ_XML.classes
         }
         private int GetTopId(int ParentPIN)
         {
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             DataTable table = dbWrapper.GetParentIDMAIN(ParentPIN);
             if (table.Rows.Count == 0)
             {
@@ -1050,7 +1042,6 @@ namespace ExportBJ_XML.classes
         }
         private int GetMaxIDMAIN()
         {
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
             DataTable table = dbWrapper.GetMaxIDMAIN();
             return int.Parse(table.Rows[0][0].ToString());
         }
@@ -1061,7 +1052,6 @@ namespace ExportBJ_XML.classes
             //HEADER: (3) Унифицированное заглавие
             //DEL: (5) Источник списания
             //GEO: (6) Географическое название
-            DatabaseWrapper dbWrapper = new DatabaseWrapper(this.Fund);
 
             AuthoritativeFile result = new AuthoritativeFile();
             DataTable table = dbWrapper.GetAFAllValues(AFTable, AFLinkId);

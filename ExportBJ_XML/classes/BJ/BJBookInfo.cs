@@ -67,7 +67,7 @@ namespace ExportBJ_XML.ValueObjects
 
         public static BJBookInfo GetBookInfoByInventoryNumber(string inv, string fund)
         {
-            DatabaseWrapper dbw = new DatabaseWrapper("fund");
+            DatabaseWrapper dbw = new DatabaseWrapper(fund);
             DataTable table = dbw.GetExemplar(inv);
             BJBookInfo result = BJBookInfo.GetBookInfoByPIN((int)table.Rows[0]["IDMAIN"], fund);
             return result;
